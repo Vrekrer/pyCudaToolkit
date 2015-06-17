@@ -38,6 +38,7 @@ class pycublasContext(object):
         self.cublasStatus = pycublas.cublasGetVersion(self._handle, version)
         return version.value
 
+    # cublasPointerMode
     @property
     def pointerMode(self):
         pMode = pycublas.c_cublasPointerMode_t()
@@ -45,15 +46,33 @@ class pycublasContext(object):
         return pycublas.cublasPointerMode_t(pMode.value)
     @pointerMode.setter
     def pointerMode(self, mode):
-        if isinstance(mode, pycublas.c_cublasPointerMode_t):
+        if isinstance(mode, pycublas.cublasPointerMode_t):
             mode = mode.value
-        if mode in ['CUBLAS_POINTER_MODE_HOST', 0, 'Host', 'host', 'HOST']:
+        if mode in ['CUBLAS_POINTER_MODE_HOST', 0, 'Host', 'HOST']:
             mode = 0
-        elif mode in ['CUBLAS_POINTER_MODE_DEVICE', 1, 'Device', 'device', 'DEVICE']:
+        elif mode in ['CUBLAS_POINTER_MODE_DEVICE', 1, 'Device', 'DEVICE']:
             mode = 1
         else:
             mode = self.pointerMode.value
         self.cublasStatus = pycublas.cublasSetPointerMode(self._handle, mode)
+
+    # cublasAtomicsMode       
+    @property
+    def atomicsMode(self):
+        aMode = pycublas.c_cublasAtomicsMode_t()
+        self.cublasStatus = pycublas.cublasGetAtomicsMode(self._handle, aMode)
+        return pycublas.cublasAtomicsMode_t(aMode.value)
+    @atomicsMode.setter
+    def atomicsMode(self, mode):
+        if isinstance(mode, pycublas.cublasAtomicsMode_t):
+            mode = mode.value
+        if mode in ['CUBLAS_ATOMICS_NOT_ALLOWED', 0, False, 'NOT_ALLOWED']:
+            mode = 0
+        elif mode in ['CUBLAS_ATOMICS_ALLOWED', 1, True, 'ALLOWED']:
+            mode = 1
+        else:
+            mode = self.atomicsMode.value
+        self.cublasStatus = pycublas.cublasSetAtomicsMode(self._handle, mode)
 
     ## cuBLAS Level-1 Functions ##
     def cublasI_amax(self, array, incx = 1):
