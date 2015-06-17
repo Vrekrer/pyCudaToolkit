@@ -49,4 +49,23 @@ class pycublasContext(object):
                                             int(array.gpudata), incx, result)
         return result.value - 1  
          
+    def cublas_asum(self, array, incx = 1):
+        if not(isinstance(array, pycuda.gpuarray.GPUArray)):
+            array = pycuda.gpuarray.to_gpu( numpy.atleast_1d(array) )
+        
+        asum_function = {'float32'    : pycublas.cublasSasum, 
+                         'float64'    : pycublas.cublasDasum,
+                         'complex64'  : pycublas.cublasScasum,
+                         'complex128' : pycublas.cublasDzasum
+                         }[array.dtype.name]
+        result_type = {'float32'    : ctypes.c_float,
+                       'float64'    : ctypes.c_double,
+                       'complex64'  : ctypes.c_float,
+                       'complex128' : ctypes.c_double
+                       }[array.dtype.name]   
+                         
+        result = result_type()
+        self._cublasStatus = asum_function(self._handle, array.size,
+                                           int(array.gpudata), incx, result)
+        return result.value
         

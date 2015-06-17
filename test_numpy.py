@@ -6,31 +6,44 @@ import numpy
 
 cublas = numpy_cublas.pycublasContext()
 
-def test_cublasI_amax_amin(vector):
+def cublas_1vector_tests(vector):
     sinlge_vector = vector.real.astype('float32')
-    double_vector = vector.real.copy()
+    double_vector = vector.real.astype('float64')
     complex_vector = vector.astype('complex64')
-    doubleComplex_vector = vector.copy()
+    doubleComplex_vector = vector.astype('complex128')
 
-    R_argmax = numpy.argmax(vector.real)
-    C_argmax = numpy.argmax(numpy.abs(vector))
+    R_argmax = numpy.abs(vector.real).argmax()
+    C_argmax = (numpy.abs(vector.real) + numpy.abs(vector.imag)).argmax()
 
     print('I_amax')
-    print('dtype , numpy.argmax, cublasI_amax')
+    print('dtype , numpy.abs(A).argmax*, cublasI_amax')
     print('float32   ', R_argmax, cublas.cublasI_amax(sinlge_vector))
     print('float64   ', R_argmax, cublas.cublasI_amax(double_vector))
     print('complex64 ', C_argmax, cublas.cublasI_amax(complex_vector))
     print('complex128', C_argmax, cublas.cublasI_amax(doubleComplex_vector))
+    print('* For complex the result is:  (|A.real| + |A.imag|).argmax()')
     print('*****************************')
 
-    R_argmin = numpy.argmin(vector.real)
-    C_argmin = numpy.argmin(numpy.abs(vector))
+    R_argmin = numpy.abs(vector.real).argmin()
+    C_argmin = (numpy.abs(vector.real) + numpy.abs(vector.imag)).argmin()
 
     print('I_amin')
-    print('dtype , numpy.argmin, cublasI_amin')
+    print('dtype , numpy.abs(A).argmin*, cublasI_amin')
     print('float32   ', R_argmin, cublas.cublasI_amin(sinlge_vector))
     print('float64   ', R_argmin, cublas.cublasI_amin(double_vector))
     print('complex64 ', C_argmin, cublas.cublasI_amin(complex_vector))
     print('complex128', C_argmin, cublas.cublasI_amin(doubleComplex_vector))
+    print('* For complex the result is:  (|A.real| + |A.imag|).argmin()')
     print('*****************************')
 
+    R_asum = numpy.abs(vector.real).sum()
+    C_asum = (numpy.abs(vector.real) + numpy.abs(vector.imag)).sum()
+
+    print('I_asum')
+    print('dtype , numpy.abs(A).sum*, cublas_asum')
+    print('float32   ', R_asum, cublas.cublas_asum(sinlge_vector))
+    print('float64   ', R_asum, cublas.cublas_asum(double_vector))
+    print('complex64 ', C_asum, cublas.cublas_asum(complex_vector))
+    print('complex128', C_asum, cublas.cublas_asum(doubleComplex_vector))
+    print('* For complex the result is:  (|A.real| + |A.imag|).sum()')
+    print('*****************************')
