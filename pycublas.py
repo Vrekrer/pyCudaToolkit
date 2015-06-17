@@ -7,7 +7,10 @@ http://docs.nvidia.com/cuda/cublas/index.htm
 cublas_api.h and cublas_v2.h
 """
 
-import platform, ctypes, ctypes.util, enum
+import platform
+import ctypes
+import ctypes.util
+import enum
 from ctypes import *
 
 ### cuBLAS Library ###
@@ -18,6 +21,7 @@ elif platform.system()=='Linux':
     libcublas = ctypes.CDLL(libname, ctypes.RTLD_GLOBAL)
 else:
     libcublas = ctypes.cdll.LoadLibrary(libname)
+
 
 ## cuBLAS Datatypes ##
 
@@ -78,52 +82,66 @@ class _opaque(ctypes.Structure):
 cublasHandle_t = POINTER(_opaque)
 cublasHandle_t.__name__ = 'cublasHandle_t'
 
-##cuBLAS Helper Functions##
 
-# cublasStatus_t
-# cublasCreate(cublasHandle_t *handle)
+## cuBLAS Helper Functions ##
+
+# cublasStatus_t cublasCreate(cublasHandle_t *handle)
 cublasCreate = libcublas.cublasCreate_v2
 cublasCreate.restype = cublasStatus_t
 cublasCreate.argtypes = [POINTER(cublasHandle_t)]
 
-# cublasStatus_t
-# cublasDestroy(cublasHandle_t handle)
+# cublasStatus_t cublasDestroy(cublasHandle_t handle)
 cublasDestroy = libcublas.cublasDestroy_v2
 cublasDestroy.restype = cublasStatus_t
 cublasDestroy.argtypes = [cublasHandle_t]
 
-# cublasStatus_t
-# cublasGetVersion(cublasHandle_t handle, int *version)
+# cublasStatus_t cublasGetVersion(cublasHandle_t handle, int *version)
 cublasGetVersion = libcublas.cublasGetVersion_v2
 cublasGetVersion.restype = cublasStatus_t
 cublasGetVersion.argtypes = [cublasHandle_t, POINTER(c_int)]
 
 
-# cublasStatus_t
-# cublasGetPointerMode(cublasHandle_t handle, cublasPointerMode_t *mode)
+# cublasStatus_t cublasGetPointerMode(cublasHandle_t handle, cublasPointerMode_t *mode)
 cublasGetPointerMode = libcublas.cublasGetPointerMode_v2
 cublasGetPointerMode.restype = cublasStatus_t
 cublasGetPointerMode.argtypes = [cublasHandle_t, POINTER(c_cublasPointerMode_t)]
 
-# cublasStatus_t
-# cublasSetPointerMode(cublasHandle_t handle, cublasPointerMode_t mode)
+# cublasStatus_t cublasSetPointerMode(cublasHandle_t handle, cublasPointerMode_t mode)
 cublasSetPointerMode = libcublas.cublasSetPointerMode_v2
 cublasSetPointerMode.restype = cublasStatus_t
 cublasSetPointerMode.argtypes = [cublasHandle_t, c_cublasPointerMode_t]
 
 
-# cublasStatus_t 
-# cublasSetAtomicsMode(cublasHandlet handle, cublasAtomicsMode_t mode)
+# cublasStatus_t cublasSetAtomicsMode(cublasHandlet handle, cublasAtomicsMode_t mode)
 cublasGetAtomicsMode = libcublas.cublasGetAtomicsMode
 cublasGetAtomicsMode.restype = cublasStatus_t
 cublasGetAtomicsMode.argtypes = [cublasHandle_t, POINTER(c_cublasAtomicsMode_t)]
 
-# cublasStatus_t 
-# cublasSetAtomicsMode(cublasHandlet handle, cublasAtomicsMode_t mode)
+# cublasStatus_t cublasSetAtomicsMode(cublasHandlet handle, cublasAtomicsMode_t mode)
 cublasSetAtomicsMode = libcublas.cublasSetAtomicsMode
 cublasSetAtomicsMode.restype = cublasStatus_t
 cublasSetAtomicsMode.argtypes = [cublasHandle_t, c_cublasAtomicsMode_t]
 
+
+## cuBLAS Level-1 Functions ##
+memory_pointer = ctypes.c_void_p
+
+# cublasStatus_t cublasIsamax(cublasHandle_t handle, int n,
+#                             const float *x, int incx, int *result)
+# cublasStatus_t cublasIdamax(cublasHandle_t handle, int n,
+#                             const double *x, int incx, int *result)
+# cublasStatus_t cublasIcamax(cublasHandle_t handle, int n,
+#                             const cuComplex *x, int incx, int *result)
+# cublasStatus_t cublasIzamax(cublasHandle_t handle, int n,
+#                             const cuDoubleComplex *x, int incx, int *result)
+cublasIsamax = libcublas.cublasIsamax_v2
+cublasIdamax = libcublas.cublasIdamax_v2
+cublasIcamax = libcublas.cublasIcamax_v2
+cublasIzamax = libcublas.cublasIzamax_v2
+for func in [cublasIsamax, cublasIdamax, cublasIcamax, cublasIzamax]:
+    func.restype = cublasStatus_t
+    func.argtypes = [cublasHandle_t, c_int,
+                     memory_pointer, c_int, POINTER(c_int)]
 
 
 
