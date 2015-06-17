@@ -143,5 +143,71 @@ for func in [cublasIsamax, cublasIdamax, cublasIcamax, cublasIzamax]:
     func.argtypes = [cublasHandle_t, c_int,
                      memory_pointer, c_int, POINTER(c_int)]
 
+# cublasStatus_t cublasIsamin(cublasHandle_t handle, int n,
+#                             const float *x, int incx, int *result)
+# cublasStatus_t cublasIdamin(cublasHandle_t handle, int n,
+#                             const double *x, int incx, int *result)
+# cublasStatus_t cublasIcamin(cublasHandle_t handle, int n,
+#                             const cuComplex *x, int incx, int *result)
+# cublasStatus_t cublasIzamin(cublasHandle_t handle, int n,
+#                             const cuDoubleComplex *x, int incx, int *result)
+cublasIsamin = libcublas.cublasIsamin_v2
+cublasIdamin = libcublas.cublasIdamin_v2
+cublasIcamin = libcublas.cublasIcamin_v2
+cublasIzamin = libcublas.cublasIzamin_v2
+for func in [cublasIsamin, cublasIdamin, cublasIcamin, cublasIzamin]:
+    func.restype = cublasStatus_t
+    func.argtypes = [cublasHandle_t, c_int,
+                     memory_pointer, c_int, POINTER(c_int)]
+
+# cublasStatus_t  cublasSasum(cublasHandle_t handle, int n,
+#                             const float           *x, int incx, float  *result)
+# cublasStatus_t  cublasDasum(cublasHandle_t handle, int n,
+#                             const double          *x, int incx, double *result)
+# cublasStatus_t cublasScasum(cublasHandle_t handle, int n,
+#                             const cuComplex       *x, int incx, float  *result)
+# cublasStatus_t cublasDzasum(cublasHandle_t handle, int n,
+#                             const cuDoubleComplex *x, int incx, double *result)
+cublasSasum  = libcublas.cublasSasum_v2
+cublasDasum  = libcublas.cublasDasum_v2
+cublasScasum = libcublas.cublasScasum_v2
+cublasDzasum = libcublas.cublasDzasum_v2
+for (func, result_type) in [(cublasSasum, c_float), (cublasDasum, c_double), 
+                            (cublasScasum, c_float), (cublasDzasum, c_double)]:
+    func.restype = cublasStatus_t
+    func.argtypes = [cublasHandle_t, c_int,
+                     memory_pointer, c_int, POINTER(result_type)]
+
+# cublasStatus_t cublasSaxpy(cublasHandle_t handle, int n,
+#                            const float           *alpha,
+#                            const float           *x, int incx,
+#                            float                 *y, int incy)
+# cublasStatus_t cublasDaxpy(cublasHandle_t handle, int n,
+#                            const double          *alpha,
+#                            const double          *x, int incx,
+#                            double                *y, int incy)
+# cublasStatus_t cublasCaxpy(cublasHandle_t handle, int n,
+#                            const cuComplex       *alpha,
+#                            const cuComplex       *x, int incx,
+#                            cuComplex             *y, int incy)
+# cublasStatus_t cublasZaxpy(cublasHandle_t handle, int n,
+#                            const cuDoubleComplex *alpha,
+#                            const cuDoubleComplex *x, int incx,
+#                            cuDoubleComplex       *y, int incy)
+cublasSaxpy = libcublas.cublasSaxpy_v2
+cublasDaxpy = libcublas.cublasDaxpy_v2
+cublasCaxpy = libcublas.cublasCaxpy_v2
+cublasZaxpy = libcublas.cublasZaxpy_v2
+for func in [cublasSaxpy, cublasDaxpy, cublasCaxpy, cublasZaxpy]:
+    func.restype = cublasStatus_t
+    func.argtypes = [cublasHandle_t, c_int,
+                     memory_pointer,
+                     memory_pointer, c_int,
+                     memory_pointer, c_int]
+
+
+
+
+
 
 
