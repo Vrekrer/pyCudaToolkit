@@ -34,6 +34,19 @@ class pycublasContext(object):
                                             int(array.gpudata), incx, result)
         return result.value - 1        
         
-
-           
+    def cublasI_amin(self, array, incx = 1):
+        result = ctypes.c_int()
+        if not(isinstance(array, pycuda.gpuarray.GPUArray)):
+            array = pycuda.gpuarray.to_gpu( numpy.atleast_1d(array) )
+        
+        I_amin_function = {'float32'    : pycublas.cublasIsamin,
+                           'float64'    : pycublas.cublasIdamin,
+                           'complex64'  : pycublas.cublasIcamin,
+                           'complex128' : pycublas.cublasIzamin
+                           }[array.dtype.name]
+        
+        self._cublasStatus = I_amin_function(self._handle, array.size,
+                                            int(array.gpudata), incx, result)
+        return result.value - 1  
+         
         

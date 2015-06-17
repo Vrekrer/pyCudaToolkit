@@ -206,8 +206,3 @@ for func in [cublasSaxpy, cublasDaxpy, cublasCaxpy, cublasZaxpy]:
                      memory_pointer, c_int]
 
 
-
-
-
-
-
