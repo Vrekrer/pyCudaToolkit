@@ -75,7 +75,9 @@ class pycublasContext(object):
         self.cublasStatus = pycublas.cublasSetAtomicsMode(self._handle, mode)
 
     ## cuBLAS Level-1 Functions ##
-    def cublasI_amax(self, array, incx = 1):
+    
+    # cublasI_amax
+    def I_amax(self, array, incx = 1):
         result = ctypes.c_int()
         if not(isinstance(array, pycuda.gpuarray.GPUArray)):
             array = pycuda.gpuarray.to_gpu( numpy.atleast_1d(array) )
@@ -89,8 +91,9 @@ class pycublasContext(object):
         self.cublasStatus = I_amax_function(self._handle, array.size,
                                             int(array.gpudata), incx, result)
         return result.value - 1        
-        
-    def cublasI_amin(self, array, incx = 1):
+
+    # cublasI_amin        
+    def I_amin(self, array, incx = 1):
         result = ctypes.c_int()
         if not(isinstance(array, pycuda.gpuarray.GPUArray)):
             array = pycuda.gpuarray.to_gpu( numpy.atleast_1d(array) )
@@ -104,8 +107,9 @@ class pycublasContext(object):
         self.cublasStatus = I_amin_function(self._handle, array.size,
                                             int(array.gpudata), incx, result)
         return result.value - 1  
-         
-    def cublas_asum(self, array, incx = 1):
+
+    # cublas_asum         
+    def asum(self, array, incx = 1):
         if not(isinstance(array, pycuda.gpuarray.GPUArray)):
             array = pycuda.gpuarray.to_gpu( numpy.atleast_1d(array) )
         
