@@ -37,7 +37,23 @@ class pycublasContext(object):
         version = ctypes.c_int()
         self.cublasStatus = pycublas.cublasGetVersion(self._handle, version)
         return version.value
-    
+
+    @property
+    def pointerMode(self):
+        pMode = pycublas.c_cublasPointerMode_t()
+        self.cublasStatus = pycublas.cublasGetPointerMode(self._handle, pMode)
+        return pycublas.cublasPointerMode_t(pMode.value)
+    @pointerMode.setter
+    def pointerMode(self, mode):
+        if isinstance(mode, pycublas.c_cublasPointerMode_t):
+            mode = mode.value
+        if mode in ['CUBLAS_POINTER_MODE_HOST', 0, 'Host', 'host', 'HOST']:
+            mode = 0
+        elif mode in ['CUBLAS_POINTER_MODE_DEVICE', 1, 'Device', 'device', 'DEVICE']:
+            mode = 1
+        else:
+            mode = self.pointerMode.value
+        self.cublasStatus = pycublas.cublasSetPointerMode(self._handle, mode)
 
     ## cuBLAS Level-1 Functions ##
     def cublasI_amax(self, array, incx = 1):
