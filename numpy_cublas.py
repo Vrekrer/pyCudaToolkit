@@ -129,3 +129,42 @@ class pycublasContext(object):
                                           int(array.gpudata), incx, result)
         return result.value
         
+    # cublas_axpy         
+    def axpy(self, alpha, X, Y, incx = 1, incy = 1):
+        '''
+        Y = alpha * X + Y
+        '''
+        onHost = []
+    
+        if not( isinstance(X, pycuda.gpuarray.GPUArray) ):
+            X = pycuda.gpuarray.to_gpu( numpy.atleast_1d(X) )
+        if isinstance(Y, pycuda.gpuarray.GPUArray):
+            Ygpu = Y
+        else:
+            Ygpu = pycuda.gpuarray.to_gpu( numpy.atleast_1d(Y) )
+        
+        #TODO Allow HOST scalars
+        self.pointerMode = 'DEVICE'
+        if not(isinstance(alpha, pycuda.gpuarray.GPUArray)):
+            alpha = pycuda.gpuarray.to_gpu( numpy.atleast_1d(alpha) )
+        
+        axpy_function = {'float32'    : pycublas.cublasSaxpy, 
+                         'float64'    : pycublas.cublasDaxpy,
+                         'complex64'  : pycublas.cublasCaxpy,
+                         'complex128' : pycublas.cublasZaxpy
+                         }[Ygpu.dtype.name]
+        #TODO Check correct data types for alpha and X
+                         
+        self.cublasStatus = axpy_function(self._handle, Ygpu.size,
+                                          alpha.ptr,
+                                          X.ptr, incx,
+                                          Ygpu.ptr, incy)
+                                          
+        #return 
+        if isinstance(Y, numpy.ndarray):
+            Ygpu.get(Y)
+            
+
+        
+        
+        
