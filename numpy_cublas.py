@@ -26,20 +26,18 @@ _valid_GPU_types = ['float32','float64','complex64','complex128']
 def _isOnGPU(array):
     return isinstance(array, pycuda.gpuarray.GPUArray)
 
-def _toGPU(array, dtype='Auto'):
-    if _isOnGPU(array)
+def _toGPU(array, dtype=None):
+    if _isOnGPU(array):
         return array
     elif isinstance(array, numpy.ndarray):
-        if dtype == 'Auto':
+        if dtype == None:
             dtype = array.dtype.name
-        if isinstance(dtype.dtype, numpy.dtype)
-            dtype = dtype.dtype.name
+        if isinstance(dtype, numpy.dtype):
+            dtype = dtype.name
         if dtype not in _valid_GPU_types:
             dtype = 'float64'
         return pycuda.gpuarray.to_gpu( array.astype(dtype, copy = True) )
     else: #scalar
-        if dtype == 'Auto':
-            dtype = None
         return pycuda.gpuarray.to_gpu( numpy.array([array], dtype=dtype) )      
 
 class pycublasContext(object):
@@ -120,7 +118,7 @@ class pycublasContext(object):
                            }[array.dtype.name]
         
         self.cublasStatus = I_amax_function(self._handle, array.size,
-                                            int(array.gpudata), incx, result)
+                                            array.ptr, incx, result)
         return result.value - 1        
 
     # cublasI_amin        
@@ -136,7 +134,7 @@ class pycublasContext(object):
                            }[array.dtype.name]
         
         self.cublasStatus = I_amin_function(self._handle, array.size,
-                                            int(array.gpudata), incx, result)
+                                            array.ptr, incx, result)
         return result.value - 1  
 
     # cublas_asum         
@@ -158,7 +156,7 @@ class pycublasContext(object):
                          
         result = result_type()
         self.cublasStatus = asum_function(self._handle, array.size,
-                                          int(array.gpudata), incx, result)
+                                          array.ptr, incx, result)
         return result.value
         
     # cublas_axpy         
