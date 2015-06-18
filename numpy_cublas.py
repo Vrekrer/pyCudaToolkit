@@ -11,6 +11,37 @@ import pycublas
 import pycuda.gpuarray
 import numpy
 
+def _checkArrayType(array):
+    '''Check if array is numpy.ndarray or pycuda.gpuarray.GPUArray'''
+    if isinstance(array, pycuda.gpuarray.GPUArray):
+        pass
+    elif isinstance(array, numpy.ndarray):
+        array = pycuda.gpuarray.to_gpu( array )
+    else:
+        raise TypeError("numpy.ndarray or pycuda.gpuarray.GPUArray expected"
+                        "got '%s'" % type(array).__name__)
+
+_valid_GPU_types = ['float32','float64','complex64','complex128']
+
+def _isOnGPU(array):
+    return isinstance(array, pycuda.gpuarray.GPUArray)
+
+def _toGPU(array, dtype='Auto'):
+    if _isOnGPU(array)
+        return array
+    elif isinstance(array, numpy.ndarray):
+        if dtype == 'Auto':
+            dtype = array.dtype.name
+        if isinstance(dtype.dtype, numpy.dtype)
+            dtype = dtype.dtype.name
+        if dtype not in _valid_GPU_types:
+            dtype = 'float64'
+        return pycuda.gpuarray.to_gpu( array.astype(dtype, copy = True) )
+    else: #scalar
+        if dtype == 'Auto':
+            dtype = None
+        return pycuda.gpuarray.to_gpu( numpy.array([array], dtype=dtype) )      
+
 class pycublasContext(object):
     def __init__(self):
         self._handle = pycublas.cublasHandle_t()
@@ -78,10 +109,10 @@ class pycublasContext(object):
     
     # cublasI_amax
     def I_amax(self, array, incx = 1):
-        result = ctypes.c_int()
-        if not(isinstance(array, pycuda.gpuarray.GPUArray)):
-            array = pycuda.gpuarray.to_gpu( numpy.atleast_1d(array) )
-        
+        _checkArrayType(array)
+        array = _toGPU(array)
+
+        result = ctypes.c_int()        
         I_amax_function = {'float32'    : pycublas.cublasIsamax,
                            'float64'    : pycublas.cublasIdamax,
                            'complex64'  : pycublas.cublasIcamax,
@@ -94,10 +125,10 @@ class pycublasContext(object):
 
     # cublasI_amin        
     def I_amin(self, array, incx = 1):
-        result = ctypes.c_int()
-        if not(isinstance(array, pycuda.gpuarray.GPUArray)):
-            array = pycuda.gpuarray.to_gpu( numpy.atleast_1d(array) )
-        
+        _checkArrayType(array)
+        array = _toGPU(array)
+            
+        result = ctypes.c_int()        
         I_amin_function = {'float32'    : pycublas.cublasIsamin,
                            'float64'    : pycublas.cublasIdamin,
                            'complex64'  : pycublas.cublasIcamin,
@@ -110,9 +141,10 @@ class pycublasContext(object):
 
     # cublas_asum         
     def asum(self, array, incx = 1):
-        if not(isinstance(array, pycuda.gpuarray.GPUArray)):
-            array = pycuda.gpuarray.to_gpu( numpy.atleast_1d(array) )
-        
+        _checkArrayType(array)
+        array = _toGPU(array)
+            
+        result = ctypes.c_int()        
         asum_function = {'float32'    : pycublas.cublasSasum, 
                          'float64'    : pycublas.cublasDasum,
                          'complex64'  : pycublas.cublasScasum,
@@ -134,33 +166,28 @@ class pycublasContext(object):
         '''
         Y = alpha * X + Y
         '''
-        onHost = []
-    
-        if not( isinstance(X, pycuda.gpuarray.GPUArray) ):
-            X = pycuda.gpuarray.to_gpu( numpy.atleast_1d(X) )
-        if isinstance(Y, pycuda.gpuarray.GPUArray):
-            Ygpu = Y
-        else:
-            Ygpu = pycuda.gpuarray.to_gpu( numpy.atleast_1d(Y) )
-        
+        _checkArrayType(X)
+        _checkArrayType(Y)
+
+        Ygpu = _toGPU(Y, dtype=Y.dtype)
+        X = _toGPU(X, dtype=Y.dtype)
+
         #TODO Allow HOST scalars
         self.pointerMode = 'DEVICE'
-        if not(isinstance(alpha, pycuda.gpuarray.GPUArray)):
-            alpha = pycuda.gpuarray.to_gpu( numpy.atleast_1d(alpha) )
-        
+        alpha = _toGPU(alpha, dtype=Y.dtype)
+            
         axpy_function = {'float32'    : pycublas.cublasSaxpy, 
                          'float64'    : pycublas.cublasDaxpy,
                          'complex64'  : pycublas.cublasCaxpy,
                          'complex128' : pycublas.cublasZaxpy
                          }[Ygpu.dtype.name]
-        #TODO Check correct data types for alpha and X
                          
         self.cublasStatus = axpy_function(self._handle, Ygpu.size,
                                           alpha.ptr,
                                           X.ptr, incx,
                                           Ygpu.ptr, incy)
                                           
-        #return 
+        #fill original Y if needed (get the data from gpu)
         if isinstance(Y, numpy.ndarray):
             Ygpu.get(Y)
             
