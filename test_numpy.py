@@ -17,10 +17,10 @@ def cublas_1vector_tests(vector):
 
     print('I_amax')
     print('dtype , numpy.abs(A).argmax*, cublasI_amax')
-    print('float32   ', R_argmax, cublas.cublasI_amax(sinlge_vector))
-    print('float64   ', R_argmax, cublas.cublasI_amax(double_vector))
-    print('complex64 ', C_argmax, cublas.cublasI_amax(complex_vector))
-    print('complex128', C_argmax, cublas.cublasI_amax(doubleComplex_vector))
+    print('float32   ', R_argmax, cublas.I_amax(sinlge_vector))
+    print('float64   ', R_argmax, cublas.I_amax(double_vector))
+    print('complex64 ', C_argmax, cublas.I_amax(complex_vector))
+    print('complex128', C_argmax, cublas.I_amax(doubleComplex_vector))
     print('* For complex the result is:  (|A.real| + |A.imag|).argmax()')
     print('*****************************')
 
@@ -29,10 +29,10 @@ def cublas_1vector_tests(vector):
 
     print('I_amin')
     print('dtype , numpy.abs(A).argmin*, cublasI_amin')
-    print('float32   ', R_argmin, cublas.cublasI_amin(sinlge_vector))
-    print('float64   ', R_argmin, cublas.cublasI_amin(double_vector))
-    print('complex64 ', C_argmin, cublas.cublasI_amin(complex_vector))
-    print('complex128', C_argmin, cublas.cublasI_amin(doubleComplex_vector))
+    print('float32   ', R_argmin, cublas.I_amin(sinlge_vector))
+    print('float64   ', R_argmin, cublas.I_amin(double_vector))
+    print('complex64 ', C_argmin, cublas.I_amin(complex_vector))
+    print('complex128', C_argmin, cublas.I_amin(doubleComplex_vector))
     print('* For complex the result is:  (|A.real| + |A.imag|).argmin()')
     print('*****************************')
 
@@ -41,9 +41,9 @@ def cublas_1vector_tests(vector):
 
     print('I_asum')
     print('dtype , numpy.abs(A).sum*, cublas_asum')
-    print('float32   ', R_asum, cublas.cublas_asum(sinlge_vector))
-    print('float64   ', R_asum, cublas.cublas_asum(double_vector))
-    print('complex64 ', C_asum, cublas.cublas_asum(complex_vector))
-    print('complex128', C_asum, cublas.cublas_asum(doubleComplex_vector))
+    print('float32   ', R_asum, cublas.asum(sinlge_vector))
+    print('float64   ', R_asum, cublas.asum(double_vector))
+    print('complex64 ', C_asum, cublas.asum(complex_vector))
+    print('complex128', C_asum, cublas.asum(doubleComplex_vector))
     print('* For complex the result is:  (|A.real| + |A.imag|).sum()')
     print('*****************************')
