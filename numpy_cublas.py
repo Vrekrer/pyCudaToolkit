@@ -11,6 +11,11 @@ import numpy
 import pycublas
 import pycuda.gpuarray
 
+class _ndarray_ptr(object):
+    def __init__(self, ndarray):
+        self.array = ndarray #Keep the array alive
+        self.ptr = ndarray.ctypes.data
+
 def _isScalar(s):
     return isinstance(s, (int, float, complex))
 
@@ -235,19 +240,19 @@ class pycublasContext(object):
         '''
         Y = alpha * X + Y
         '''
-
         Y, alpha, X = self._caster(Y, alpha, X)
 
-        #TODO Allow HOST scalars
-        self.pointerMode = 'DEVICE'
-        alpha = _toGPU(alpha, Y.dtype)
+        if _isOnGPU(alpha):
+            self.pointerMode = 'DEVICE'
+        else:
+            self.pointerMode = 'HOST'
+            alpha = _ndarray_ptr(alpha)
           
         axpy_function = {'float32'    : pycublas.cublasSaxpy, 
                          'float64'    : pycublas.cublasDaxpy,
                          'complex64'  : pycublas.cublasCaxpy,
                          'complex128' : pycublas.cublasZaxpy
                          }[Y.dtype.name]
-                         
         self.cublasStatus = axpy_function(self._handle, Y.size,
                                           alpha.ptr,
                                           X.ptr, incx,
