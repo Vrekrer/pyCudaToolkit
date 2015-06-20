@@ -138,10 +138,10 @@ cublasIsamax = libcublas.cublasIsamax_v2
 cublasIdamax = libcublas.cublasIdamax_v2
 cublasIcamax = libcublas.cublasIcamax_v2
 cublasIzamax = libcublas.cublasIzamax_v2
-for func in [cublasIsamax, cublasIdamax, cublasIcamax, cublasIzamax]:
-    func.restype = cublasStatus_t
-    func.argtypes = [cublasHandle_t, c_int,
-                     memory_pointer, c_int, POINTER(c_int)]
+for funct in [cublasIsamax, cublasIdamax, cublasIcamax, cublasIzamax]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int,
+                      memory_pointer, c_int, POINTER(c_int)]
 
 # cublasStatus_t cublasIsamin(cublasHandle_t handle, int n,
 #                             const float *x, int incx, int *result)
@@ -155,10 +155,10 @@ cublasIsamin = libcublas.cublasIsamin_v2
 cublasIdamin = libcublas.cublasIdamin_v2
 cublasIcamin = libcublas.cublasIcamin_v2
 cublasIzamin = libcublas.cublasIzamin_v2
-for func in [cublasIsamin, cublasIdamin, cublasIcamin, cublasIzamin]:
-    func.restype = cublasStatus_t
-    func.argtypes = [cublasHandle_t, c_int,
-                     memory_pointer, c_int, POINTER(c_int)]
+for funct in [cublasIsamin, cublasIdamin, cublasIcamin, cublasIzamin]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int,
+                      memory_pointer, c_int, POINTER(c_int)]
 
 # cublasStatus_t  cublasSasum(cublasHandle_t handle, int n,
 #                             const float           *x, int incx, float  *result)
@@ -172,11 +172,11 @@ cublasSasum  = libcublas.cublasSasum_v2
 cublasDasum  = libcublas.cublasDasum_v2
 cublasScasum = libcublas.cublasScasum_v2
 cublasDzasum = libcublas.cublasDzasum_v2
-for (func, result_type) in [(cublasSasum, c_float), (cublasDasum, c_double), 
+for (funct, result_type) in [(cublasSasum, c_float), (cublasDasum, c_double), 
                             (cublasScasum, c_float), (cublasDzasum, c_double)]:
-    func.restype = cublasStatus_t
-    func.argtypes = [cublasHandle_t, c_int,
-                     memory_pointer, c_int, POINTER(result_type)]
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int,
+                      memory_pointer, c_int, POINTER(result_type)]
 
 # cublasStatus_t cublasSaxpy(cublasHandle_t handle, int n,
 #                            const float           *alpha,
@@ -198,11 +198,72 @@ cublasSaxpy = libcublas.cublasSaxpy_v2
 cublasDaxpy = libcublas.cublasDaxpy_v2
 cublasCaxpy = libcublas.cublasCaxpy_v2
 cublasZaxpy = libcublas.cublasZaxpy_v2
-for func in [cublasSaxpy, cublasDaxpy, cublasCaxpy, cublasZaxpy]:
-    func.restype = cublasStatus_t
-    func.argtypes = [cublasHandle_t, c_int,
-                     memory_pointer,
+for funct in [cublasSaxpy, cublasDaxpy, cublasCaxpy, cublasZaxpy]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int,
+                      memory_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int]
+
+# cublasStatus_t cublasScopy(cublasHandle_t handle, int n,
+#                            const float           *x, int incx,
+#                            float                 *y, int incy)
+# cublasStatus_t cublasDcopy(cublasHandle_t handle, int n,
+#                            const double          *x, int incx,
+#                            double                *y, int incy)
+# cublasStatus_t cublasCcopy(cublasHandle_t handle, int n,
+#                            const cuComplex       *x, int incx,
+#                            cuComplex             *y, int incy)
+# cublasStatus_t cublasZcopy(cublasHandle_t handle, int n,
+#                            const cuDoubleComplex *x, int incx,
+#                            cuDoubleComplex       *y, int incy)
+cublasScopy = libcublas.cublasScopy_v2
+cublasDcopy = libcublas.cublasDcopy_v2
+cublasCcopy = libcublas.cublasCcopy_v2
+cublasZcopy = libcublas.cublasZcopy_v2
+for funct in [cublasScopy, cublasDcopy, cublasCcopy, cublasZcopy]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int]
+
+# cublasStatus_t cublasSdot (cublasHandle_t handle, int n,
+#                            const float           *x, int incx,
+#                            const float           *y, int incy,
+#                            float           *result)
+# cublasStatus_t cublasDdot (cublasHandle_t handle, int n,
+#                            const double          *x, int incx,
+#                            const double          *y, int incy,
+#                            double          *result)
+# cublasStatus_t cublasCdotu(cublasHandle_t handle, int n,
+#                            const cuComplex       *x, int incx,
+#                            const cuComplex       *y, int incy,
+#                            cuComplex       *result)
+# cublasStatus_t cublasCdotc(cublasHandle_t handle, int n,
+#                            const cuComplex       *x, int incx,
+#                            const cuComplex       *y, int incy,
+#                            cuComplex       *result)
+# cublasStatus_t cublasZdotu(cublasHandle_t handle, int n,
+#                            const cuDoubleComplex *x, int incx,
+#                            const cuDoubleComplex *y, int incy,
+#                            cuDoubleComplex *result)
+# cublasStatus_t cublasZdotc(cublasHandle_t handle, int n,
+#                            const cuDoubleComplex *x, int incx,
+#                            const cuDoubleComplex *y, int incy,
+#                            cuDoubleComplex       *result)
+cublasSdot = libcublas.cublasSdot_V2
+cublasDdot = libcublas.cublasDdot_V2
+cublasCdotu = libcublas.cublasCdotu_v2
+cublasCdotc = libcublas.cublasCdotc_v2
+cublasZdotu = libcublas.cublasZdotu_v2
+cublasZdotc = libcublas.cublasZdotc_v2
+for funct in [cublasSdot, cublasDdot, 
+              cublasCdotu, cublasCdotc,
+              cublasZdotu, cublasZdotc]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int,
                      memory_pointer, c_int,
-                     memory_pointer, c_int]
+                     memory_pointer, c_int,
+                     result_pointer]
 
 
