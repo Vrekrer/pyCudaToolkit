@@ -267,4 +267,21 @@ for funct in [cublasSdot, cublasDdot,
                      memory_pointer, c_int,
                      result_pointer]
 
+# cublasStatus_t  cublasSnrm2(cublasHandle_t handle, int n,
+#                             const float           *x, int incx, float  *result)
+# cublasStatus_t  cublasDnrm2(cublasHandle_t handle, int n,
+#                             const double          *x, int incx, double *result)
+# cublasStatus_t cublasScnrm2(cublasHandle_t handle, int n,
+#                             const cuComplex       *x, int incx, float  *result)
+# cublasStatus_t cublasDznrm2(cublasHandle_t handle, int n,
+#                             const cuDoubleComplex *x, int incx, double *result)
+cublasSnrm2  = libcublas.cublasSnrm2_v2
+cublasDnrm2  = libcublas.cublasDnrm2_v2
+cublasScnrm2 = libcublas.cublasScnrm2_v2
+cublasDznrm2 = libcublas.cublasDznrm2_v2
+for (funct, result_type) in [(cublasSnrm2, c_float), (cublasDnrm2, c_double), 
+                            (cublasScnrm2, c_float), (cublasDznrm2, c_double)]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int,
+                      memory_pointer, c_int, POINTER(result_type)]
 

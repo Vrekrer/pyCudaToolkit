@@ -287,7 +287,28 @@ class pycublasContext(object):
                                          result.ptr)
         return result.data[0]
             
-
+    # cublas_nrm2         
+    def nrm2(self, array, incx = 1):
+        """
+        Eucledian norm
+        """
+        array = _toGPU(array, array.dtype)
+                  
+        nrm2_function = {'float32'    : pycublas.cublasSnrm2, 
+                         'float64'    : pycublas.cublasDnrm2,
+                         'complex64'  : pycublas.cublasScnrm2,
+                         'complex128' : pycublas.cublasDznrm2
+                         }[array.dtype.name]
+        result_type = {'float32'    : ctypes.c_float,
+                       'float64'    : ctypes.c_double,
+                       'complex64'  : ctypes.c_float,
+                       'complex128' : ctypes.c_double
+                       }[array.dtype.name]   
+                         
+        result = result_type()
+        self.cublasStatus = nrm2_function(self._handle, array.size,
+                                          array.ptr, incx, result)
+        return result.value
         
         
         
