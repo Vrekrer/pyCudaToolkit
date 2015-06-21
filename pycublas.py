@@ -84,6 +84,7 @@ cublasHandle_t.__name__ = 'cublasHandle_t'
 
 memory_pointer = ctypes.c_void_p
 result_pointer = ctypes.c_void_p
+scalar_pointer = ctypes.c_void_p
 
 ## cuBLAS Helper Functions ##
 
@@ -285,3 +286,41 @@ for (funct, result_type) in [(cublasSnrm2, c_float), (cublasDnrm2, c_double),
     funct.argtypes = [cublasHandle_t, c_int,
                       memory_pointer, c_int, POINTER(result_type)]
 
+# cublasStatus_t  cublasSrot(cublasHandle_t handle, int n,
+#                            float           *x, int incx,
+#                            float           *y, int incy,
+#                            const float  *c, const float           *s)
+# cublasStatus_t  cublasDrot(cublasHandle_t handle, int n,
+#                            double          *x, int incx,
+#                            double          *y, int incy,
+#                            const double *c, const double          *s)
+# cublasStatus_t  cublasCrot(cublasHandle_t handle, int n,
+#                            cuComplex       *x, int incx,
+#                            cuComplex       *y, int incy,
+#                            const float  *c, const cuComplex       *s)
+# cublasStatus_t cublasCsrot(cublasHandle_t handle, int n,
+#                            cuComplex       *x, int incx,
+#                            cuComplex       *y, int incy,
+#                            const float  *c, const float           *s)
+# cublasStatus_t  cublasZrot(cublasHandle_t handle, int n,
+#                            cuDoubleComplex *x, int incx,
+#                            cuDoubleComplex *y, int incy,
+#                            const double *c, const cuDoubleComplex *s)
+# cublasStatus_t cublasZdrot(cublasHandle_t handle, int n,
+#                            cuDoubleComplex *x, int incx,
+#                            cuDoubleComplex *y, int incy,
+#                            const double *c, const double          *s)
+cublasSrot = libcublas.cublasSrot_v2
+cublasDrot = libcublas.cublasDrot_v2
+cublasCrot = libcublas.cublasCrot_v2
+cublasCsrot = libcublas.cublasCsrot_v2
+cublasZrot = libcublas.cublasZrot_v2
+cublasZdrot = libcublas.cublasZdrot_v2
+for funct in [cublasSrot, cublasDrot,
+              cublasCrot, cublasCsrot,
+              cublasZrot, cublasZdrot]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int,
+                     memory_pointer, c_int,
+                     memory_pointer, c_int,
+                     scalar_pointer, scalar_pointer]
