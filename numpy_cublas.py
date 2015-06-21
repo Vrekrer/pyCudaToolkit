@@ -309,6 +309,41 @@ class pycublasContext(object):
         self.cublasStatus = nrm2_function(self._handle, X.size,
                                           X.ptr, incx, result)
         return result.value
-        
-        
-        
+
+     # cublas_rot
+    def rot(self, X, Y, c, s, incx = 1, incy = 1):
+        '''
+        (X, Y) = rot(X, Y, c, s, incx = 1, incy = 1)
+        This function applies Givens rotation matrix
+
+        G = (  c  s)
+            (-s*  c)
+
+        to vectors X and Y.
+        Hence, the result is X[k] =   c * X[k] + s * Y[j]
+                         and Y[j] = - s * X[k] + c * Y[j]
+        where k = i * incx  and j = i * incy
+
+        if c is complex, only the real part is used
+        '''
+        Y, X, c, s = self._caster(Y, X, c, s)
+        if 'float' in Y.dtype.name:
+            dot_function = {'float32' : pycublas.cublasSrot,
+                            'float64' : pycublas.cublasDrot
+                           }[Y.dtype.name]
+        else: # complex
+            s_complex = (s[0].imag != 0)
+            dot_function = {('complex64' , True) : pycublas.cublasCrot,
+                            ('complex128', True) : pycublas.cublasZrot,
+                            ('complex64' , False)  : pycublas.cublasCsrot,
+                            ('complex128', False)  : pycublas.cublasZdrot,
+                           }[(Y.dtype.name, s_complex)]
+
+        s = _ndarray_ptr(s)
+        c = _ndarray_ptr(c.real)
+        self.cublasStatus = dot_function(self._handle, Y.size,
+                                         X.ptr, incx,
+                                         Y.ptr, incy,
+                                         c.ptr, s.ptr)
+        return self._return(X), self._return(Y)
+
