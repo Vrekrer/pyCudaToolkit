@@ -82,6 +82,8 @@ class _opaque(ctypes.Structure):
 cublasHandle_t = POINTER(_opaque)
 cublasHandle_t.__name__ = 'cublasHandle_t'
 
+memory_pointer = ctypes.c_void_p
+result_pointer = ctypes.c_void_p
 
 ## cuBLAS Helper Functions ##
 
@@ -124,7 +126,6 @@ cublasSetAtomicsMode.argtypes = [cublasHandle_t, c_cublasAtomicsMode_t]
 
 
 ## cuBLAS Level-1 Functions ##
-memory_pointer = ctypes.c_void_p
 
 # cublasStatus_t cublasIsamax(cublasHandle_t handle, int n,
 #                             const float *x, int incx, int *result)
