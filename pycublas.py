@@ -324,3 +324,25 @@ for funct in [cublasSrot, cublasDrot,
                      memory_pointer, c_int,
                      memory_pointer, c_int,
                      scalar_pointer, scalar_pointer]
+
+# cublasStatus_t cublasSrotg(cublasHandle_t handle,
+#                            float           *a, float           *b,
+#                            float  *c, float           *s)
+# cublasStatus_t cublasDrotg(cublasHandle_t handle,
+#                            double          *a, double          *b,
+#                            double *c, double          *s)
+# cublasStatus_t cublasCrotg(cublasHandle_t handle,
+#                            cuComplex       *a, cuComplex       *b,
+#                            float  *c, cuComplex       *s)
+# cublasStatus_t cublasZrotg(cublasHandle_t handle,
+#                            cuDoubleComplex *a, cuDoubleComplex *b,
+#                            double *c, cuDoubleComplex *s)
+cublasSrotg = libcublas.cublasSrotg_v2
+cublasDrotg = libcublas.cublasDrotg_v2
+cublasCrotg = libcublas.cublasCrotg_v2
+cublasZrotg = libcublas.cublasZrotg_v2
+for funct in [cublasSrotg, cublasDrotg, cublasCrotg, cublasZrotg]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t,
+                     scalar_pointer, scalar_pointer,
+                     result_pointer, result_pointer]
