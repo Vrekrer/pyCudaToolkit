@@ -252,12 +252,12 @@ for funct in [cublasScopy, cublasDcopy, cublasCcopy, cublasZcopy]:
 #                            const cuDoubleComplex *x, int incx,
 #                            const cuDoubleComplex *y, int incy,
 #                            cuDoubleComplex       *result)
-cublasSdot = libcublas.cublasSdot #TODO what happened with V2?
-cublasDdot = libcublas.cublasDdot
-cublasCdotu = libcublas.cublasCdotu
-cublasCdotc = libcublas.cublasCdotc
-cublasZdotu = libcublas.cublasZdotu
-cublasZdotc = libcublas.cublasZdotc
+cublasSdot = libcublas.cublasSdot_v2
+cublasDdot = libcublas.cublasDdot_v2
+cublasCdotu = libcublas.cublasCdotu_v2
+cublasCdotc = libcublas.cublasCdotc_v2
+cublasZdotu = libcublas.cublasZdotu_v2
+cublasZdotc = libcublas.cublasZdotc_v2
 for funct in [cublasSdot, cublasDdot, 
               cublasCdotu, cublasCdotc,
               cublasZdotu, cublasZdotc]:
