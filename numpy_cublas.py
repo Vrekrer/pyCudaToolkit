@@ -186,53 +186,53 @@ class pycublasContext(object):
     ## cuBLAS Level-1 Functions ##
     
     # cublasI_amax
-    def I_amax(self, array, incx = 1):
-        array = _toGPU(array, array.dtype)
+    def I_amax(self, X, incx = 1):
+        X = _toGPU(X, X.dtype)
     
         I_amax_function = {'float32'    : pycublas.cublasIsamax,
                            'float64'    : pycublas.cublasIdamax,
                            'complex64'  : pycublas.cublasIcamax,
                            'complex128' : pycublas.cublasIzamax
-                           }[array.dtype.name]
+                           }[X.dtype.name]
         result = ctypes.c_int()
         
-        self.cublasStatus = I_amax_function(self._handle, array.size,
-                                            array.ptr, incx, result)
+        self.cublasStatus = I_amax_function(self._handle, X.size,
+                                            X.ptr, incx, result)
         return result.value - 1        
 
     # cublasI_amin        
-    def I_amin(self, array, incx = 1):
-        array = _toGPU(array, array.dtype)
+    def I_amin(self, X, incx = 1):
+        X = _toGPU(X, array.dtype)
       
         I_amin_function = {'float32'    : pycublas.cublasIsamin,
                            'float64'    : pycublas.cublasIdamin,
                            'complex64'  : pycublas.cublasIcamin,
                            'complex128' : pycublas.cublasIzamin
-                           }[array.dtype.name]
+                           }[X.dtype.name]
         result = ctypes.c_int()
         
-        self.cublasStatus = I_amin_function(self._handle, array.size,
-                                            array.ptr, incx, result)
+        self.cublasStatus = I_amin_function(self._handle, X.size,
+                                            X.ptr, incx, result)
         return result.value - 1  
 
     # cublas_asum         
-    def asum(self, array, incx = 1):
-        array = _toGPU(array, array.dtype)
+    def asum(self, X, incx = 1):
+        X = _toGPU(X, X.dtype)
                   
         asum_function = {'float32'    : pycublas.cublasSasum, 
                          'float64'    : pycublas.cublasDasum,
                          'complex64'  : pycublas.cublasScasum,
                          'complex128' : pycublas.cublasDzasum
-                         }[array.dtype.name]
+                         }[X.dtype.name]
         result_type = {'float32'    : ctypes.c_float,
                        'float64'    : ctypes.c_double,
                        'complex64'  : ctypes.c_float,
                        'complex128' : ctypes.c_double
-                       }[array.dtype.name]   
+                       }[X.dtype.name]   
                          
         result = result_type()
-        self.cublasStatus = asum_function(self._handle, array.size,
-                                          array.ptr, incx, result)
+        self.cublasStatus = asum_function(self._handle, X.size,
+                                          X.ptr, incx, result)
         return result.value
 
     # cublas_axpy         
@@ -288,26 +288,26 @@ class pycublasContext(object):
         return result.data[0]
             
     # cublas_nrm2         
-    def nrm2(self, array, incx = 1):
+    def nrm2(self, X, incx = 1):
         """
         Eucledian norm
         """
-        array = _toGPU(array, array.dtype)
+        X = _toGPU(X, X.dtype)
                   
         nrm2_function = {'float32'    : pycublas.cublasSnrm2, 
                          'float64'    : pycublas.cublasDnrm2,
                          'complex64'  : pycublas.cublasScnrm2,
                          'complex128' : pycublas.cublasDznrm2
-                         }[array.dtype.name]
+                         }[X.dtype.name]
         result_type = {'float32'    : ctypes.c_float,
                        'float64'    : ctypes.c_double,
                        'complex64'  : ctypes.c_float,
                        'complex128' : ctypes.c_double
-                       }[array.dtype.name]   
+                       }[X.dtype.name]   
                          
         result = result_type()
-        self.cublasStatus = nrm2_function(self._handle, array.size,
-                                          array.ptr, incx, result)
+        self.cublasStatus = nrm2_function(self._handle, X.size,
+                                          X.ptr, incx, result)
         return result.value
         
         
