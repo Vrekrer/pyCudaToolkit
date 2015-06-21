@@ -13,7 +13,7 @@ import pycuda.gpuarray
 
 class _ndarray_ptr(object):
     def __init__(self, ndarray):
-        self.array = ndarray #Keep the array alive
+        self.data = ndarray #Keep the array alive
         self.ptr = ndarray.ctypes.data
 
 def _isScalar(s):
@@ -258,6 +258,34 @@ class pycublasContext(object):
                                           X.ptr, incx,
                                           Y.ptr, incy)
         return self._return(Y)
+    
+    #TODO cublas_copy
+
+    # cublas_dot         
+    def dot(self, X, Y, incx = 1, incy = 1, cc = False):
+        '''
+        X.Y
+        if cc (complex conjugate) = True
+        X.Y*
+        '''
+        Y, X = self._caster(Y, X)
+        if 'float' in Y.dtype.name:  
+            dot_function = {'float32' : pycublas.cublasSdot, 
+                            'float64' : pycublas.cublasDdot
+                           }[Y.dtype.name]
+        else: # complex
+            dot_function = {('complex64' , False) : pycublas.cublasCdotu,
+                            ('complex128', False) : pycublas.cublasZdotu,
+                            ('complex64' , True)  : pycublas.cublasCdotc,
+                            ('complex128', True)  : pycublas.cublasZdotc,
+                           }[(Y.dtype.name, cc)]
+
+        result = _ndarray_ptr( numpy.array([0], dtype=Y.dtype) )
+        self.cublasStatus = dot_function(self._handle, Y.size,
+                                         X.ptr, incx,
+                                         Y.ptr, incy,
+                                         result.ptr)
+        return result.data[0]
             
 
         
