@@ -633,6 +633,41 @@ for funct in [cublasSspr2, cublasDspr2]:
                       memory_pointer, c_int,
                       memory_pointer]
 
+# cublasStatus_t cublasSsymv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const float           *alpha,
+#                            const float           *A, int lda,
+#                            const float           *x, int incx, const float           *beta,
+#                            float           *y, int incy)
+# cublasStatus_t cublasDsymv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const double          *alpha,
+#                            const double          *A, int lda,
+#                            const double          *x, int incx, const double          *beta,
+#                            double          *y, int incy)
+# cublasStatus_t cublasCsymv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const cuComplex       *alpha, /* host or device pointer */
+#                            const cuComplex       *A, int lda,
+#                            const cuComplex       *x, int incx, const cuComplex       *beta,
+#                            cuComplex       *y, int incy)
+# cublasStatus_t cublasZsymv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const cuDoubleComplex *alpha,
+#                            const cuDoubleComplex *A, int lda,
+#                            const cuDoubleComplex *x, int incx, const cuDoubleComplex *beta,
+#                            cuDoubleComplex *y, int incy)
+cublasSsymv = libcublas.cublasSsymv_v2
+cublasDsymv = libcublas.cublasSsymv_v2
+cublasCsymv = libcublas.cublasSsymv_v2
+cublasZsymv = libcublas.cublasSsymv_v2
+for funct in [cublasSsymv, cublasDsymv, cublasCsymv, cublasZsymv]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int]
+                      
+
 #TODO remaining Level2 functions
 
 ## cuBLAS Level-3 Functions ##
