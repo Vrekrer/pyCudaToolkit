@@ -613,7 +613,25 @@ for funct in [cublasSspr, cublasDspr]:
                       scalar_pointer,
                       memory_pointer, c_int,
                       memory_pointer]
-
+                      
+# cublasStatus_t cublasSspr2(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const float  *alpha,
+#                            const float  *x, int incx,
+#                            const float  *y, int incy, float  *AP)
+# cublasStatus_t cublasDspr2(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const double *alpha,
+#                            const double *x, int incx,
+#                            const double *y, int incy, double *AP)
+cublasSspr2 = libcublas.cublasSspr2_v2
+cublasDspr2 = libcublas.cublasDspr2_v2
+for funct in [cublasSspr2, cublasDspr2]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_int, 
+                      scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      memory_pointer]
 
 #TODO remaining Level2 functions
 
