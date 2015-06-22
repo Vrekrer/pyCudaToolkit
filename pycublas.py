@@ -555,3 +555,54 @@ for funct in [cublasSger, cublasDger,
                       memory_pointer, c_int,
                       memory_pointer, c_int,
                       memory_pointer, c_int]
+
+#TODO remaining Level2 functions
+
+## cuBLAS Level-3 Functions ##
+
+# cublasStatus_t cublasSgemm(cublasHandle_t handle,
+#                            cublasOperation_t transa, cublasOperation_t transb,
+#                            int m, int n, int k,
+#                            const float           *alpha,
+#                            const float           *A, int lda,
+#                            const float           *B, int ldb,
+#                            const float           *beta,
+#                            float           *C, int ldc)
+# cublasStatus_t cublasDgemm(cublasHandle_t handle,
+#                            cublasOperation_t transa, cublasOperation_t transb,
+#                            int m, int n, int k,
+#                            const double          *alpha,
+#                            const double          *A, int lda,
+#                            const double          *B, int ldb,
+#                            const double          *beta,
+#                            double          *C, int ldc)
+# cublasStatus_t cublasCgemm(cublasHandle_t handle,
+#                            cublasOperation_t transa, cublasOperation_t transb,
+#                            int m, int n, int k,
+#                            const cuComplex       *alpha,
+#                            const cuComplex       *A, int lda,
+#                            const cuComplex       *B, int ldb,
+#                            const cuComplex       *beta,
+#                            cuComplex       *C, int ldc)
+# cublasStatus_t cublasZgemm(cublasHandle_t handle,
+#                            cublasOperation_t transa, cublasOperation_t transb,
+#                            int m, int n, int k,
+#                            const cuDoubleComplex *alpha,
+#                            const cuDoubleComplex *A, int lda,
+#                            const cuDoubleComplex *B, int ldb,
+#                            const cuDoubleComplex *beta,
+#                            cuDoubleComplex *C, int ldc)
+cublasSgemm = libcublas.cublasSgemm_v2
+cublasDgemm = libcublas.cublasDgemm_v2
+cublasCgemm = libcublas.cublasCgemm_v2
+cublasZgemm = libcublas.cublasZgemm_v2
+for funct in [cublasSgemm, cublasDgemm, cublasCgemm, cublasZgemm]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t,
+                      c_cublasOperation_t, c_cublasOperation_t,
+                      c_int, c_int, c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int]
