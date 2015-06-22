@@ -373,3 +373,35 @@ for funct in [cublasSrotmg, cublasDrotmg]:
                       scalar_pointer, scalar_pointer,
                       scalar_pointer, scalar_pointer,
                       param_pointer]
+
+# cublasStatus_t  cublasSscal(cublasHandle_t handle, int n,
+#                             const float           *alpha,
+#                             float           *x, int incx)
+# cublasStatus_t  cublasDscal(cublasHandle_t handle, int n,
+#                             const double          *alpha,
+#                             double          *x, int incx)
+# cublasStatus_t  cublasCscal(cublasHandle_t handle, int n,
+#                             const cuComplex       *alpha,
+#                             cuComplex       *x, int incx)
+# cublasStatus_t cublasCsscal(cublasHandle_t handle, int n,
+#                             const float           *alpha,
+#                             cuComplex       *x, int incx)
+# cublasStatus_t  cublasZscal(cublasHandle_t handle, int n,
+#                             const cuDoubleComplex *alpha,
+#                             cuDoubleComplex *x, int incx)
+# cublasStatus_t cublasZdscal(cublasHandle_t handle, int n,
+#                             const double          *alpha,
+#                             cuDoubleComplex *x, int incx)
+cublasSscal  = libcublas.cublasSscal_v2
+cublasDscal  = libcublas.cublasDscal_v2
+cublasCscal  = libcublas.cublasCscal_v2
+cublasCsscal = libcublas.cublasCsscal_v2
+cublasZscal  = libcublas.cublasZscal_v2
+cublasZdscal = libcublas.cublasZdscal_v2
+for funct in [cublasSscal, cublasDscal,
+              cublasCscal, cublasCsscal,
+              cublasZscal, cublasZdscal]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int
+                      scalar_pointer,
+                      memory_pointer, c_int]
