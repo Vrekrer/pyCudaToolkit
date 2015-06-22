@@ -550,7 +550,7 @@ for funct in [cublasSger, cublasDger,
               cublasCgeru, cublasCgerc,
               cublasZgeru, cublasZgerc]:
     funct.restype = cublasStatus_t
-    funct.argtypes = [cublasHandle_t, c_int, c_int
+    funct.argtypes = [cublasHandle_t, c_int, c_int,
                       scalar_pointer,
                       memory_pointer, c_int,
                       memory_pointer, c_int,
