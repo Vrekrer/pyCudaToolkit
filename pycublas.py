@@ -85,6 +85,7 @@ cublasHandle_t.__name__ = 'cublasHandle_t'
 memory_pointer = ctypes.c_void_p
 result_pointer = ctypes.c_void_p
 scalar_pointer = ctypes.c_void_p
+param_pointer = ctypes.c_void_p
 
 ## cuBLAS Helper Functions ##
 
@@ -346,3 +347,16 @@ for funct in [cublasSrotg, cublasDrotg, cublasCrotg, cublasZrotg]:
     funct.argtypes = [cublasHandle_t,
                      scalar_pointer, scalar_pointer,
                      result_pointer, result_pointer]
+
+# cublasStatus_t cublasSrotm(cublasHandle_t handle, int n, float  *x, int incx,
+#                            float  *y, int incy, const float*  param)
+# cublasStatus_t cublasDrotm(cublasHandle_t handle, int n, double *x, int incx,
+#                            double *y, int incy, const double* param)
+cublasSrotm = libcublas.cublasSrotm_v2
+cublasDrotm = libcublas.cublasDrotm_v2
+for funct in [cublasSrotg, cublasDrotg, cublasCrotg, cublasZrotg]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      param_pointer]
