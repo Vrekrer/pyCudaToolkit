@@ -402,6 +402,24 @@ for funct in [cublasSscal, cublasDscal,
               cublasCscal, cublasCsscal,
               cublasZscal, cublasZdscal]:
     funct.restype = cublasStatus_t
-    funct.argtypes = [cublasHandle_t, c_int
+    funct.argtypes = [cublasHandle_t, c_int,
                       scalar_pointer,
+                      memory_pointer, c_int]
+
+# cublasStatus_t cublasSswap(cublasHandle_t handle, int n, float           *x,
+#                            int incx, float           *y, int incy)
+# cublasStatus_t cublasDswap(cublasHandle_t handle, int n, double          *x,
+#                            int incx, double          *y, int incy)
+# cublasStatus_t cublasCswap(cublasHandle_t handle, int n, cuComplex       *x,
+#                            int incx, cuComplex       *y, int incy)
+# cublasStatus_t cublasZswap(cublasHandle_t handle, int n, cuDoubleComplex *x,
+#                            int incx, cuDoubleComplex *y, int incy)
+cublasSswap = libcublas.cublasSswap_v2
+cublasDswap = libcublas.cublasDswap_v2
+cublasCswap = libcublas.cublasCswap_v2
+cublasZswap = libcublas.cublasZswap_v2
+for funct in [cublasSswap, cublasDswap, cublasCswap, cublasZswap]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int,
+                      memory_pointer, c_int,
                       memory_pointer, c_int]
