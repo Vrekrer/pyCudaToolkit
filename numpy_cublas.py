@@ -51,7 +51,7 @@ def _toGPU(data, new_dtype):
     elif isinstance(data, numpy.ndarray):
         return pycuda.gpuarray.to_gpu( numpy.asfortranarray(data, new_dtype) )
     else:
-        TypeError("data must be array or scalar")
+        raise TypeError("data must be array or scalar")
 
 
 class pycublasContext(object):
@@ -78,7 +78,7 @@ class pycublasContext(object):
     @castCheck.setter
     def castCheck(self, value):
         if value not in ['auto', 'result', 'None', None]:
-            TypeError("castCheck must be 'auto', 'result' or 'None'")
+            raise TypeError("castCheck must be 'auto', 'result' or 'None'")
         else:
             if value == None:
                 value = 'None'
@@ -406,6 +406,7 @@ class pycublasContext(object):
 
     #TODO cublas_gbmv
 
+    #cublas_gemv
     def gemv(self, alpha, A, x, y, beta, op = 'N', incx = 1, incy = 1):
         '''
         y = gemv(self, alpha, A, x, y, beta)
@@ -419,7 +420,28 @@ class pycublasContext(object):
         op(A) = A    if op = 'N'
                 A.T  if op = 'T'
                 A.H  if op = 'H'
+
+        for op(A) with dimensions m rows x n columns
+        x must have dimension n and
+        y must have dimension m
         '''
+        y, x, A, alpha, beta = self._caster(y, x, A, alpha, beta)
+
+        if op == 'N':
+            print 'op N'
+            vsize = (y.size, x.size)
+        else: #'T' or 'H'
+            print 'op T'
+            vsize = (x.size, y.size)
+        print vsize
+        print A.shape
+        print vsize != A.shape
+        if vsize != A.shape:
+            print 'Error'
+            raise ValueError('''for op(A) with dimensions m rows x n columns \
+                             x must have dimension n and \
+                             y must have dimension m''')
+
         op_dict = {'N': pycublas.cublasOperation_t.CUBLAS_OP_N,
                    'T': pycublas.cublasOperation_t.CUBLAS_OP_T,
                    'H': pycublas.cublasOperation_t.CUBLAS_OP_C,
@@ -429,8 +451,6 @@ class pycublasContext(object):
         else:
             ValueError("op must be 'N', 'T' or 'H'")
 
-        y, x, A, alpha, beta = self._caster(y, x, A, alpha, beta)
-        
         if _isOnGPU(alpha) or _isOnGPU(beta):
             self.pointerMode = 'DEVICE'
             alpha = _toGPU(alpha, y.dtype)
