@@ -50,7 +50,7 @@ def _toGPU(data, new_dtype):
     else:
         TypeError("data must be array or scalar")
 
-        
+
 class pycublasContext(object):
     def __init__(self):
         self._handle = pycublas.cublasHandle_t()
@@ -393,4 +393,62 @@ class pycublasContext(object):
             return _toGPU(c, c.dtype), _toGPU(s, s.dtype)
         else: #return to host
             return c.get()[0], s.get()[0]
+    
+    #TODO cublas_rotm
+    #TODO cublas_rotmg
+    #TODO cublas_scal
+    #TODO cublas_swap
+    
+    ## cuBLAS Level-2 Functions ##
+    
+    #TODO cublas_gbmv
+    
+    def gemv(self, alpha, A, x, y, beta, op = 'N', incx = 1, incy = 1):
+        '''
+        y = gemv(self, alpha, A, x, y, beta)
+        This function performs the matrix-vector multiplication
+        
+        y = alpha op(A).x + beta y
+        
+        where A is a matrix, x and y are vectors and alpha and beta are scalars
+        Also, for matrix A
 
+        op(A) = A    if op = 'N'
+                A.T  if op = 'T'
+                A.H  if op = 'H'
+        '''
+        op_dict = {'N': pycublas.cublasOperation_t.CUBLAS_OP_N,
+                   'T': pycublas.cublasOperation_t.CUBLAS_OP_T,
+                   'H': pycublas.cublasOperation_t.CUBLAS_OP_C,
+                  }
+        if op in op_dict.keys():
+            op = op_dict[op]
+        else:
+            ValueError("op must be 'N', 'T' or 'H'")
+        
+        y, x, A, alpha, beta = self._caster(y, x, A, alpha, beta)
+        
+        if _isOnGPU(alpha) or _isOnGPU(beta):
+            self.pointerMode = 'DEVICE'
+            alpha = _toGPU(alpha, y.dtype)
+            beta  = _toGPU(beta, y.dtype)
+        else:
+            self.pointerMode = 'HOST'
+            alpha = _ndarray_ptr(alpha)
+            beta  = _ndarray_ptr(beta)
+        gemv_function = {'float32'    : pycublas.cublasSgemv,
+                         'float64'    : pycublas.cublasDgemv,
+                         'complex64'  : pycublas.cublasCgemv,
+                         'complex128' : pycublas.cublasZgemv
+                         }[y.dtype.name]
+        #TODO check this
+        m,n = A.shape
+        lda = m
+        self.cublasStatus = gemv_function(self._handle, op.value,
+                                          m, n,
+                                          alpha.ptr,
+                                          A.ptr, lda,
+                                          x.ptr, incx,
+                                          beta.ptr,
+                                          y.ptr, incy)
+        return self._return(y)
