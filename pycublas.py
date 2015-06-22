@@ -354,9 +354,22 @@ for funct in [cublasSrotg, cublasDrotg, cublasCrotg, cublasZrotg]:
 #                            double *y, int incy, const double* param)
 cublasSrotm = libcublas.cublasSrotm_v2
 cublasDrotm = libcublas.cublasDrotm_v2
-for funct in [cublasSrotg, cublasDrotg, cublasCrotg, cublasZrotg]:
+for funct in [cublasSrotm, cublasDrotm]:
     funct.restype = cublasStatus_t
     funct.argtypes = [cublasHandle_t, c_int,
                       memory_pointer, c_int,
                       memory_pointer, c_int,
+                      param_pointer]
+
+# cublasStatus_t cublasSrotmg(cublasHandle_t handle, float  *d1, float  *d2,
+#                             float  *x1, const float  *y1, float  *param)
+# cublasStatus_t cublasDrotmg(cublasHandle_t handle, double *d1, double *d2,
+#                             double *x1, const double *y1, double *param)
+cublasSrotmg = libcublas.cublasSrotmg_v2
+cublasDrotmg = libcublas.cublasDrotmg_v2
+for funct in [cublasSrotmg, cublasDrotmg]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t,
+                      scalar_pointer, scalar_pointer,
+                      scalar_pointer, scalar_pointer,
                       param_pointer]
