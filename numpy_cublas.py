@@ -15,6 +15,11 @@ class _ndarray_ptr(object):
     def __init__(self, ndarray):
         self.data = ndarray #Keep the array alive
         self.ptr = ndarray.ctypes.data
+    def get(self):
+        return self.data
+    @property
+    def dtype(self):
+        return self.data.dtype
 
 def _isScalar(s):
     return isinstance(s, (int, float, complex))
@@ -94,6 +99,9 @@ class pycublasContext(object):
             _areSingle = all( [True if _isScalar(x) 
                               else x.dtype.name in ['float32','complex64']
                               for x in (result,) + args] )
+            _areScalars = all( [_isScalar(x)
+                               for x in (result,) + args] )
+            _areSingle = _areSingle and not _areScalars
             new_dtype = {(False,True ):'float32',
                          (False,False):'float64',
                          (True, True ):'complex64',
@@ -316,8 +324,8 @@ class pycublasContext(object):
         (X, Y) = rot(X, Y, c, s, incx = 1, incy = 1)
         This function applies Givens rotation matrix
 
-        G = (  c  s)
-            (-s*  c)
+        G = [[  c, s],
+             [-s*, c]]
 
         to vectors X and Y.
         Hence, the result is X[k] =   c * X[k] + s * Y[j]
@@ -335,8 +343,8 @@ class pycublasContext(object):
             s_complex = (s[0].imag != 0)
             dot_function = {('complex64' , True) : pycublas.cublasCrot,
                             ('complex128', True) : pycublas.cublasZrot,
-                            ('complex64' , False)  : pycublas.cublasCsrot,
-                            ('complex128', False)  : pycublas.cublasZdrot,
+                            ('complex64' , False): pycublas.cublasCsrot,
+                            ('complex128', False): pycublas.cublasZdrot,
                            }[(Y.dtype.name, s_complex)]
 
         s = _ndarray_ptr(s)
@@ -346,4 +354,43 @@ class pycublasContext(object):
                                          Y.ptr, incy,
                                          c.ptr, s.ptr)
         return self._return(X), self._return(Y)
+
+     # cublas_rotg
+    def rotg(self, a, b):
+        '''
+        (c, s) = rotg(self, a, b)
+        This function constructs the Givens rotation matrix
+
+        G = [[  c, s],
+             [-s*, c]]
+
+        such that G.[a,b] = [r,0]
+        '''
+        a, b = self._caster(a, b)
+
+        if _isOnGPU(a) or _isOnGPU(b):
+            self.pointerMode = 'DEVICE'
+            a = _toGPU(a, a.dtype)
+            b = _toGPU(b, a.dtype)
+            s = _toGPU(0, a.dtype)
+            c = _toGPU(0, a.real.dtype)
+        else:
+            self.pointerMode = 'HOST'
+            a = _ndarray_ptr(a)
+            b = _ndarray_ptr(b)
+            s = _ndarray_ptr( numpy.array([0], dtype=a.dtype) )
+            c = _ndarray_ptr( numpy.array([0], dtype=a.data.real.dtype) )
+        rotg_function = {'float32'    : pycublas.cublasSrotg,
+                         'float64'    : pycublas.cublasDrotg,
+                         'complex64'  : pycublas.cublasCrotg,
+                         'complex128' : pycublas.cublasZrotg
+                         }[a.dtype.name]
+
+        self.cublasStatus = rotg_function(self._handle,
+                                          a.ptr, b.ptr,
+                                          c.ptr, s.ptr)
+        if self.returnToDevice:
+            return _toGPU(c, c.dtype), _toGPU(s, s.dtype)
+        else: #return to host
+            return c.get()[0], s.get()[0]
 
