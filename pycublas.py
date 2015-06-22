@@ -467,3 +467,45 @@ for funct in [cublasSgbmv, cublasDgbmv, cublasCgbmv, cublasZgbmv]:
                       memory_pointer, c_int,
                       scalar_pointer,
                       memory_pointer, c_int]
+
+# cublasStatus_t cublasSgemv(cublasHandle_t handle, cublasOperation_t trans,
+#                            int m, int n,
+#                            const float           *alpha,
+#                            const float           *A, int lda,
+#                            const float           *x, int incx,
+#                            const float           *beta,
+#                            float           *y, int incy)
+# cublasStatus_t cublasDgemv(cublasHandle_t handle, cublasOperation_t trans,
+#                            int m, int n,
+#                            const double          *alpha,
+#                            const double          *A, int lda,
+#                            const double          *x, int incx,
+#                            const double          *beta,
+#                            double          *y, int incy)
+# cublasStatus_t cublasCgemv(cublasHandle_t handle, cublasOperation_t trans,
+#                            int m, int n,
+#                            const cuComplex       *alpha,
+#                            const cuComplex       *A, int lda,
+#                            const cuComplex       *x, int incx,
+#                            const cuComplex       *beta,
+#                            cuComplex       *y, int incy)
+# cublasStatus_t cublasZgemv(cublasHandle_t handle, cublasOperation_t trans,
+#                            int m, int n,
+#                            const cuDoubleComplex *alpha,
+#                            const cuDoubleComplex *A, int lda,
+#                            const cuDoubleComplex *x, int incx,
+#                            const cuDoubleComplex *beta,
+#                            cuDoubleComplex *y, int incy)
+cublasSgemv = libcublas.cublasSgemv_v2
+cublasDgemv = libcublas.cublasDgemv_v2
+cublasCgemv = libcublas.cublasCgemv_v2
+cublasZgemv = libcublas.cublasZgemv_v2
+for funct in [cublasSgemv, cublasDgemv, cublasCgemv, cublasZgemv]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_cublasOperation_t,
+                      c_int, c_int, c_int, c_int,
+                      scalar_pointer
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int]
