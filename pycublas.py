@@ -509,3 +509,49 @@ for funct in [cublasSgemv, cublasDgemv, cublasCgemv, cublasZgemv]:
                       memory_pointer, c_int,
                       scalar_pointer,
                       memory_pointer, c_int]
+
+# cublasStatus_t  cublasSger(cublasHandle_t handle, int m, int n,
+#                            const float           *alpha,
+#                            const float           *x, int incx,
+#                            const float           *y, int incy,
+#                            float           *A, int lda)
+# cublasStatus_t  cublasDger(cublasHandle_t handle, int m, int n,
+#                            const double          *alpha,
+#                            const double          *x, int incx,
+#                            const double          *y, int incy,
+#                            double          *A, int lda)
+# cublasStatus_t cublasCgeru(cublasHandle_t handle, int m, int n,
+#                            const cuComplex       *alpha,
+#                            const cuComplex       *x, int incx,
+#                            const cuComplex       *y, int incy,
+#                            cuComplex       *A, int lda)
+# cublasStatus_t cublasCgerc(cublasHandle_t handle, int m, int n,
+#                            const cuComplex       *alpha,
+#                            const cuComplex       *x, int incx,
+#                            const cuComplex       *y, int incy,
+#                            cuComplex       *A, int lda)
+# cublasStatus_t cublasZgeru(cublasHandle_t handle, int m, int n,
+#                            const cuDoubleComplex *alpha,
+#                            const cuDoubleComplex *x, int incx,
+#                            const cuDoubleComplex *y, int incy,
+#                            cuDoubleComplex *A, int lda)
+# cublasStatus_t cublasZgerc(cublasHandle_t handle, int m, int n,
+#                            const cuDoubleComplex *alpha,
+#                            const cuDoubleComplex *x, int incx,
+#                            const cuDoubleComplex *y, int incy,
+#                            cuDoubleComplex *A, int lda)
+cublasSger  = libcublas.cublasSger_v2
+cublasDger  = libcublas.cublasDger_v2
+cublasCgeru = libcublas.cublasCgeru_v2
+cublasCgerc = libcublas.cublasCgerc_v2
+cublasZgeru = libcublas.cublasZgeru_v2
+cublasZgerc = libcublas.cublasZgerc_v2
+for funct in [cublasSger, cublasDger,
+              cublasCgeru, cublasCgerc,
+              cublasZgeru, cublasZgerc]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_int, c_int
+                      scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int]
