@@ -613,7 +613,7 @@ for funct in [cublasSspr, cublasDspr]:
                       scalar_pointer,
                       memory_pointer, c_int,
                       memory_pointer]
-                      
+
 # cublasStatus_t cublasSspr2(cublasHandle_t handle, cublasFillMode_t uplo,
 #                            int n, const float  *alpha,
 #                            const float  *x, int incx,
@@ -666,7 +666,30 @@ for funct in [cublasSsymv, cublasDsymv, cublasCsymv, cublasZsymv]:
                       memory_pointer, c_int,
                       scalar_pointer,
                       memory_pointer, c_int]
-                      
+
+# cublasStatus_t cublasSsyr(cublasHandle_t handle, cublasFillMode_t uplo,
+#                           int n, const float           *alpha,
+#                           const float           *x, int incx, float           *A, int lda)
+# cublasStatus_t cublasDsyr(cublasHandle_t handle, cublasFillMode_t uplo,
+#                           int n, const double          *alpha,
+#                           const double          *x, int incx, double          *A, int lda)
+# cublasStatus_t cublasCsyr(cublasHandle_t handle, cublasFillMode_t uplo,
+#                           int n, const cuComplex       *alpha,
+#                           const cuComplex       *x, int incx, cuComplex       *A, int lda)
+# cublasStatus_t cublasZsyr(cublasHandle_t handle, cublasFillMode_t uplo,
+#                           int n, const cuDoubleComplex *alpha,
+#                           const cuDoubleComplex *x, int incx, cuDoubleComplex *A, int lda)
+cublasSsyr = libcublas.cublasSsyr_v2
+cublasDsyr = libcublas.cublasDsyr_v2
+cublasCsyr = libcublas.cublasCsyr_v2
+cublasZsyr = libcublas.cublasZsyr_v2
+for funct in [cublasSsyr, cublasDsyr, cublasCsyr, cublasZsyr]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int]
 
 #TODO remaining Level2 functions
 
