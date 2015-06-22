@@ -462,7 +462,7 @@ for funct in [cublasSgbmv, cublasDgbmv, cublasCgbmv, cublasZgbmv]:
     funct.restype = cublasStatus_t
     funct.argtypes = [cublasHandle_t, c_cublasOperation_t,
                       c_int, c_int, c_int, c_int,
-                      scalar_pointer
+                      scalar_pointer,
                       memory_pointer, c_int,
                       memory_pointer, c_int,
                       scalar_pointer,
@@ -504,7 +504,7 @@ for funct in [cublasSgemv, cublasDgemv, cublasCgemv, cublasZgemv]:
     funct.restype = cublasStatus_t
     funct.argtypes = [cublasHandle_t, c_cublasOperation_t,
                       c_int, c_int,
-                      scalar_pointer
+                      scalar_pointer,
                       memory_pointer, c_int,
                       memory_pointer, c_int,
                       scalar_pointer,
