@@ -691,6 +691,31 @@ for funct in [cublasSsyr, cublasDsyr, cublasCsyr, cublasZsyr]:
                       memory_pointer, c_int,
                       memory_pointer, c_int]
 
+# cublasStatus_t cublasSsyr2(cublasHandle_t handle, cublasFillMode_t uplo, int n,
+#                            const float           *alpha, const float           *x, int incx,
+#                            const float           *y, int incy, float           *A, int lda
+# cublasStatus_t cublasDsyr2(cublasHandle_t handle, cublasFillMode_t uplo, int n,
+#                            const double          *alpha, const double          *x, int incx,
+#                            const double          *y, int incy, double          *A, int lda
+# cublasStatus_t cublasCsyr2(cublasHandle_t handle, cublasFillMode_t uplo, int n,
+#                            const cuComplex       *alpha, const cuComplex       *x, int incx,
+#                            const cuComplex       *y, int incy, cuComplex       *A, int lda
+# cublasStatus_t cublasZsyr2(cublasHandle_t handle, cublasFillMode_t uplo, int n,
+#                            const cuDoubleComplex *alpha, const cuDoubleComplex *x, int incx,
+#                            const cuDoubleComplex *y, int incy, cuDoubleComplex *A, int lda
+cublasSsyr2 = libcublas.cublasSsyr2_v2
+cublasDsyr2 = libcublas.cublasDsyr2_v2
+cublasCsyr2 = libcublas.cublasCsyr2_v2
+cublasZsyr2 = libcublas.cublasZsyr2_v2
+for funct in [cublasSsyr2, cublasDsyr2, cublasCsyr2, cublasZsyr2]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int]
+
 #TODO remaining Level2 functions
 
 ## cuBLAS Level-3 Functions ##
