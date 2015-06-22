@@ -423,3 +423,47 @@ for funct in [cublasSswap, cublasDswap, cublasCswap, cublasZswap]:
     funct.argtypes = [cublasHandle_t, c_int,
                       memory_pointer, c_int,
                       memory_pointer, c_int]
+
+## cuBLAS Level-2 Functions ##
+
+# cublasStatus_t cublasSgbmv(cublasHandle_t handle, cublasOperation_t trans,
+#                            int m, int n, int kl, int ku,
+#                            const float           *alpha,
+#                            const float           *A, int lda,
+#                            const float           *x, int incx,
+#                            const float           *beta,
+#                            float           *y, int incy)
+# cublasStatus_t cublasDgbmv(cublasHandle_t handle, cublasOperation_t trans,
+#                            int m, int n, int kl, int ku,
+#                            const double          *alpha,
+#                            const double          *A, int lda,
+#                            const double          *x, int incx,
+#                            const double          *beta,
+#                            double          *y, int incy)
+# cublasStatus_t cublasCgbmv(cublasHandle_t handle, cublasOperation_t trans,
+#                            int m, int n, int kl, int ku,
+#                            const cuComplex       *alpha,
+#                            const cuComplex       *A, int lda,
+#                            const cuComplex       *x, int incx,
+#                            const cuComplex       *beta,
+#                            cuComplex       *y, int incy)
+# cublasStatus_t cublasZgbmv(cublasHandle_t handle, cublasOperation_t trans,
+#                            int m, int n, int kl, int ku,
+#                            const cuDoubleComplex *alpha,
+#                            const cuDoubleComplex *A, int lda,
+#                            const cuDoubleComplex *x, int incx,
+#                            const cuDoubleComplex *beta,
+#                            cuDoubleComplex *y, int incy)
+cublasSgbmv = libcublas.cublasSgbmv_v2
+cublasDgbmv = libcublas.cublasDgbmv_v2
+cublasCgbmv = libcublas.cublasCgbmv_v2
+cublasZgbmv = libcublas.cublasZgbmv_v2
+for funct in [cublasSgbmv, cublasDgbmv, cublasCgbmv, cublasZgbmv]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_cublasOperation_t,
+                      c_int, c_int, c_int, c_int,
+                      scalar_pointer
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int]
