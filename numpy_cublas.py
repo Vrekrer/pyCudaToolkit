@@ -40,13 +40,16 @@ def _toGPU(data, new_dtype):
         return pycuda.gpuarray.to_gpu( numpy.array([data], dtype=new_dtype) )
 
     elif _isOnGPU(data):
-        if data.dtype == new_dtype:
-            return data
+        if data.flags.f_contiguous:
+            if data.dtype == new_dtype:
+                return data
+            else:
+                return data.astype(new_dtype)
         else:
-            return data.astype(new_dtype)
+            return _toGPU(numpy.asfortranarray(data.get(), new_dtype))
 
     elif isinstance(data, numpy.ndarray):
-        return pycuda.gpuarray.to_gpu( data.astype(new_dtype, copy = True) )
+        return pycuda.gpuarray.to_gpu( numpy.asfortranarray(data, new_dtype) )
     else:
         TypeError("data must be array or scalar")
 
@@ -393,16 +396,16 @@ class pycublasContext(object):
             return _toGPU(c, c.dtype), _toGPU(s, s.dtype)
         else: #return to host
             return c.get()[0], s.get()[0]
-    
+
     #TODO cublas_rotm
     #TODO cublas_rotmg
     #TODO cublas_scal
     #TODO cublas_swap
-    
+
     ## cuBLAS Level-2 Functions ##
-    
+
     #TODO cublas_gbmv
-    
+
     def gemv(self, alpha, A, x, y, beta, op = 'N', incx = 1, incy = 1):
         '''
         y = gemv(self, alpha, A, x, y, beta)
@@ -425,7 +428,7 @@ class pycublasContext(object):
             op = op_dict[op]
         else:
             ValueError("op must be 'N', 'T' or 'H'")
-        
+
         y, x, A, alpha, beta = self._caster(y, x, A, alpha, beta)
         
         if _isOnGPU(alpha) or _isOnGPU(beta):
@@ -441,7 +444,6 @@ class pycublasContext(object):
                          'complex64'  : pycublas.cublasCgemv,
                          'complex128' : pycublas.cublasZgemv
                          }[y.dtype.name]
-        #TODO check this
         m,n = A.shape
         lda = m
         self.cublasStatus = gemv_function(self._handle, op.value,
