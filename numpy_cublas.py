@@ -409,7 +409,7 @@ class pycublasContext(object):
     #cublas_gemv
     def gemv(self, alpha, A, x, y, beta, op = 'N', incx = 1, incy = 1):
         '''
-        y = gemv(self, alpha, A, x, y, beta)
+        y = gemv(self, alpha, A, x, y, beta, op = 'N', incx = 1, incy = 1):
         This function performs the matrix-vector multiplication
         
         y = alpha op(A).x + beta y
@@ -418,40 +418,31 @@ class pycublasContext(object):
         Also, for matrix A
 
         op(A) = A    if op = 'N'
-                A.T  if op = 'T'
-                A.H  if op = 'H'
+                A.T  if op = 'T' (transpose)
+                A.H  if op = 'H' (complex transpose)
 
         for op(A) with dimensions m rows x n columns
-        x must have dimension n and
-        y must have dimension m
+        x must have dimension n*incx and
+        y must have dimension m*incy
         '''
-        y, x, A, alpha, beta = self._caster(y, x, A, alpha, beta)
-
-        if op == 'N':
-            print 'op N'
-            vsize = (y.size, x.size)
-        else: #'T' or 'H'
-            print 'op T'
-            vsize = (x.size, y.size)
-        print vsize
-        print A.shape
-        print vsize != A.shape
-        if vsize != A.shape:
-            print 'Error'
-            raise ValueError('''for op(A) with dimensions m rows x n columns \
-                             x must have dimension n and \
-                             y must have dimension m''')
+        (shape_op, ) = [1 if x=='N' else -1 for x in [op]]
 
         op_dict = {'N': pycublas.cublasOperation_t.CUBLAS_OP_N,
                    'T': pycublas.cublasOperation_t.CUBLAS_OP_T,
-                   'H': pycublas.cublasOperation_t.CUBLAS_OP_C,
-                  }
+                   'H': pycublas.cublasOperation_t.CUBLAS_OP_C}
         if op in op_dict.keys():
             op = op_dict[op]
         else:
             ValueError("op must be 'N', 'T' or 'H'")
+            
+        y, x, A, alpha, beta = self._caster(y, x, A, alpha, beta)
 
-        if _isOnGPU(alpha) or _isOnGPU(beta):
+        m,n = A.shape
+        lda = m
+        if (y.size*incy, x.size*incx)[::shape_op] != (m,n):
+            raise ValueError('Matrix and vectors have incompatible dimensions')
+
+        if any([_isOnGPU(alpha), _isOnGPU(beta)]):
             self.pointerMode = 'DEVICE'
             alpha = _toGPU(alpha, y.dtype)
             beta  = _toGPU(beta, y.dtype)
@@ -464,8 +455,6 @@ class pycublasContext(object):
                          'complex64'  : pycublas.cublasCgemv,
                          'complex128' : pycublas.cublasZgemv
                          }[y.dtype.name]
-        m,n = A.shape
-        lda = m
         self.cublasStatus = gemv_function(self._handle, op.value,
                                           m, n,
                                           alpha.ptr,
@@ -474,3 +463,68 @@ class pycublasContext(object):
                                           beta.ptr,
                                           y.ptr, incy)
         return self._return(y)
+    
+    #TODO leve-2 functions
+    
+    ## cuBLAS Level-3 Functions ##
+
+    #cublas_gemm
+    def gemm(self, alpha, A, B, beta, C, opA = 'N', opB = 'N'):
+        '''
+        C = gemm(self, alpha, A, B, beta, C, opA = 'N', opB = 'N'):
+        This function performs the matrix-matrix multiplication
+        
+        C = alpha opA(A) opA(B) + beta C
+        
+        where alpha and beta are scalars, and A, B and C are matrices
+        Also, for matrix X = A or B
+
+        opX(X) = X    if opX = 'N'
+                 X.T  if opX = 'T' (transpose)
+                 X.H  if opX = 'H' (complex transpose)
+
+        dimensions must be compatible
+        opA(A) with m rows x k columns
+        opB(B) with k rows x n columns
+        C      with m rows x n columns
+        '''
+        (shape_opA, shape_opB) = [1 if x=='N' else -1 for x in [opA, opB]]
+        
+        op_dict = {'N': pycublas.cublasOperation_t.CUBLAS_OP_N,
+                   'T': pycublas.cublasOperation_t.CUBLAS_OP_T,
+                   'H': pycublas.cublasOperation_t.CUBLAS_OP_C}
+        if all([opA in op_dict.keys(), opB in op_dict.keys()]):
+            opA = op_dict[opA]
+            opB = op_dict[opB]
+        else:
+            ValueError("op must be 'N', 'T' or 'H'")
+
+        C, A, B, alpha, beta = self._caster(C, A, B, alpha, beta)
+
+        m , k = A.shape[::shape_opA]
+        kB, n = B.shape[::shape_opB]
+        if any([C.shape != (m,n), k != kB]):
+            raise ValueError('Matrices have incompatible dimensions')
+        
+        if any([_isOnGPU(alpha), _isOnGPU(beta)]):
+            self.pointerMode = 'DEVICE'
+            alpha = _toGPU(alpha, y.dtype)
+            beta  = _toGPU(beta, y.dtype)
+        else:
+            self.pointerMode = 'HOST'
+            alpha = _ndarray_ptr(alpha)
+            beta  = _ndarray_ptr(beta)
+        gemm_function = {'float32'    : pycublas.cublasSgemm,
+                         'float64'    : pycublas.cublasDgemm,
+                         'complex64'  : pycublas.cublasCgemm,
+                         'complex128' : pycublas.cublasZgemm
+                         }[C.dtype.name]
+        self.cublasStatus = gemm_function(self._handle, 
+                                          opA.value, opB.value,
+                                          m, n, k,
+                                          alpha.ptr,
+                                          A.ptr, A.shape[0],
+                                          B.ptr, B.shape[0],
+                                          beta.ptr,
+                                          C.ptr, m)        
+        return self._return(C)
