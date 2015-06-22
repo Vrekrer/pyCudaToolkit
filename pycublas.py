@@ -556,6 +556,27 @@ for funct in [cublasSger, cublasDger,
                       memory_pointer, c_int,
                       memory_pointer, c_int]
 
+# cublasStatus_t cublasSsbmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, int k, const float  *alpha,
+#                            const float  *A, int lda,
+#                            const float  *x, int incx,
+#                            const float  *beta, float *y, int incy)
+# cublasStatus_t cublasDsbmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, int k, const double *alpha,
+#                            const double *A, int lda,
+#                            const double *x, int incx,
+#                            const double *beta, double *y, int incy)
+cublasSsbmv = libcublas.cublasSsbmv_v2
+cublasDsbmv = libcublas.cublasDsbmv_v2
+for funct in [cublasSsbmv, cublasDsbmv]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_int, c_int, scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      scalar_pointer, memory_pointer, c_int]
+
+
 #TODO remaining Level2 functions
 
 ## cuBLAS Level-3 Functions ##
