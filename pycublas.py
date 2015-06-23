@@ -83,6 +83,7 @@ cublasHandle_t = POINTER(_opaque)
 cublasHandle_t.__name__ = 'cublasHandle_t'
 
 memory_pointer = ctypes.c_void_p
+array_pointer = ctypes.c_void_p
 result_pointer = ctypes.c_void_p
 scalar_pointer = ctypes.c_void_p
 param_pointer = ctypes.c_void_p
@@ -1205,8 +1206,17 @@ cublasZgemmBatched = libcublas.cublasZgemmBatched
 for funct in [cublasSgemmBatched, cublasDgemmBatched, 
           cublasCgemmBatched, cublasZgemmBatched]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t,
+                      c_cublasOperation_t,   #transa
+                      c_cublasOperation_t,   #transb
+                      c_int, c_int, c_int,   #m, n, k
+                      scalar_pointer,        #*alpha
+                      array_pointer, c_int,  #*A[], lda
+                      array_pointer, c_int,  #*B[], ldb
+                      scalar_pointer,        #*beta
+                      array_pointer, c_int,  #*C[], ldc
+                      c_int                  #batchCount
+                      ]
 
 # cublasStatus_t cublasSsymm(cublasHandle_t handle,
 #                            cublasSideMode_t side, cublasFillMode_t uplo,
@@ -1553,8 +1563,17 @@ cublasZtrsmBatched = libcublas.cublasZtrsmBatched
 for funct in [cublasStrsmBatched, cublasDtrsmBatched, 
               cublasCtrsmBatched, cublasZtrsmBatched]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t,
+                      c_cublasSideMode_t,    #side
+                      c_cublasFillMode_t,    #uplo
+                      c_cublasOperation_t,   #trans
+                      c_cublasDiagType_t,    #diag
+                      c_int, c_int,          #m, n
+                      scalar_pointer,        #*alpha
+                      array_pointer, c_int,  #*A[], lda
+                      array_pointer, c_int,  #*B[], ldb
+                      c_int                  #batchCount
+                      ]
 
 # cublasStatus_t cublasChemm(cublasHandle_t handle,
 #                            cublasSideMode_t side, cublasFillMode_t uplo,
