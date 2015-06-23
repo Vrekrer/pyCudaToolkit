@@ -111,14 +111,17 @@ class pycublasContext(object):
                     else _toGPU(x, new_dtype) 
                     for x in args]
 
-    def _getOPs(self, *args):
+    def _getOPs(self, *args, **kargs):
         op_dict = {'N': pycublas.cublasOperation_t.CUBLAS_OP_N,
                    'T': pycublas.cublasOperation_t.CUBLAS_OP_T,
                    'C': pycublas.cublasOperation_t.CUBLAS_OP_C}
-        if all([op in op_dict.keys() for op in args]):
+        valid_keys = kargs['valid'] if 'valid' in kargs else op_dict.keys()
+        if all([op in valid_keys for op in args]):
             return (op_dict[op] for op in args)
         else:
-            raise ValueError("op must be 'N', 'T' or 'C'")
+            valid_string = ', '.join("'%s'"% s for s in valid_keys[:-1]) + \
+                           " or '%s'" % valid_keys[-1]
+            raise ValueError("op must be %s" % valid_string)
 
     @property
     def returnToHost(self):
@@ -500,8 +503,8 @@ class pycublasContext(object):
         
         if any([_isOnGPU(alpha), _isOnGPU(beta)]):
             self.pointerMode = 'DEVICE'
-            alpha = _toGPU(alpha, y.dtype)
-            beta  = _toGPU(beta, y.dtype)
+            alpha = _toGPU(alpha, C.dtype)
+            beta  = _toGPU(beta, C.dtype)
         else:
             self.pointerMode = 'HOST'
             alpha = _ndarray_ptr(alpha)
@@ -520,3 +523,11 @@ class pycublasContext(object):
                                           beta.ptr,
                                           C.ptr, m)        
         return self._return(C)
+
+    #TODO cublas_gemmBatched
+    
+    #cublas_symm
+    def symm(self, alpha, A, B, beta, C, opA = 'N', opB = 'N'):
+        '''
+        This function performs the symmetric matrix-matrix multiplication
+        '''
