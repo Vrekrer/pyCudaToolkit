@@ -716,7 +716,179 @@ for funct in [cublasSsyr2, cublasDsyr2, cublasCsyr2, cublasZsyr2]:
                       memory_pointer, c_int,
                       memory_pointer, c_int]
 
-#TODO remaining Level2 functions
+# cublasStatus_t cublasStbmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, int k, const float           *A, int lda,
+#                            float           *x, int incx)
+# cublasStatus_t cublasDtbmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, int k, const double          *A, int lda,
+#                            double          *x, int incx)
+# cublasStatus_t cublasCtbmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, int k, const cuComplex       *A, int lda,
+#                            cuComplex       *x, int incx)
+# cublasStatus_t cublasZtbmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, int k, const cuDoubleComplex *A, int lda,
+#                            cuDoubleComplex *x, int incx)
+
+
+# cublasStatus_t cublasStbsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, int k, const float           *A, int lda,
+#                            float           *x, int incx)
+# cublasStatus_t cublasDtbsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, int k, const double          *A, int lda,
+#                            double          *x, int incx)
+# cublasStatus_t cublasCtbsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, int k, const cuComplex       *A, int lda,
+#                            cuComplex       *x, int incx)
+# cublasStatus_t cublasZtbsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, int k, const cuDoubleComplex *A, int lda,
+#                            cuDoubleComplex *x, int incx)
+
+
+# cublasStatus_t cublasStpmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const float           *AP,
+#                            float           *x, int incx)
+# cublasStatus_t cublasDtpmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const double          *AP,
+#                            double          *x, int incx)
+# cublasStatus_t cublasCtpmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const cuComplex       *AP,
+#                            cuComplex       *x, int incx)
+# cublasStatus_t cublasZtpmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const cuDoubleComplex *AP,
+#                            cuDoubleComplex *x, int incx)
+
+
+# cublasStatus_t cublasStrmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const float           *A, int lda,
+#                            float           *x, int incx)
+# cublasStatus_t cublasDtrmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const double          *A, int lda,
+#                            double          *x, int incx)
+# cublasStatus_t cublasCtrmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const cuComplex       *A, int lda,
+#                            cuComplex       *x, int incx)
+# cublasStatus_t cublasZtrmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const cuDoubleComplex *A, int lda,
+#                            cuDoubleComplex *x, int incx)
+
+
+# cublasStatus_t cublasStrsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const float           *A, int lda,
+#                            float           *x, int incx)
+# cublasStatus_t cublasDtrsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const double          *A, int lda,
+#                            double          *x, int incx)
+# cublasStatus_t cublasCtrsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const cuComplex       *A, int lda,
+#                            cuComplex       *x, int incx)
+# cublasStatus_t cublasZtrsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const cuDoubleComplex *A, int lda,
+#                            cuDoubleComplex *x, int incx)
+
+
+# cublasStatus_t cublasChemv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const cuComplex       *alpha,
+#                            const cuComplex       *A, int lda,
+#                            const cuComplex       *x, int incx,
+#                            const cuComplex       *beta,
+#                            cuComplex       *y, int incy)
+# cublasStatus_t cublasZhemv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const cuDoubleComplex *alpha,
+#                            const cuDoubleComplex *A, int lda,
+#                            const cuDoubleComplex *x, int incx,
+#                            const cuDoubleComplex *beta,
+#                            cuDoubleComplex *y, int incy)
+
+# cublasStatus_t cublasChbmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                           int n, int k, const cuComplex       *alpha,
+#                           const cuComplex       *A, int lda,
+#                           const cuComplex       *x, int incx,
+#                           const cuComplex       *beta,
+#                           cuComplex       *y, int incy)
+# cublasStatus_t cublasZhbmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                           int n, int k, const cuDoubleComplex *alpha,
+#                           const cuDoubleComplex *A, int lda,
+#                           const cuDoubleComplex *x, int incx,
+#                           const cuDoubleComplex *beta,
+#                           cuDoubleComplex *y, int incy)
+
+# cublasStatus_t cublasChpmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const cuComplex       *alpha,
+#                            const cuComplex       *AP,
+#                            const cuComplex       *x, int incx,
+#                            const cuComplex       *beta,
+#                            cuComplex       *y, int incy)
+# cublasStatus_t cublasZhpmv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const cuDoubleComplex *alpha,
+#                            const cuDoubleComplex *AP,
+#                            const cuDoubleComplex *x, int incx,
+#                            const cuDoubleComplex *beta,
+#                            cuDoubleComplex *y, int incy)
+
+
+# cublasStatus_t cublasCher(cublasHandle_t handle, cublasFillMode_t uplo,
+#                           int n, const float  *alpha,
+#                           const cuComplex       *x, int incx,
+#                           cuComplex       *A, int lda)
+# cublasStatus_t cublasZher(cublasHandle_t handle, cublasFillMode_t uplo,
+#                           int n, const double *alpha,
+#                           const cuDoubleComplex *x, int incx,
+#                           cuDoubleComplex *A, int lda)
+
+
+# cublasStatus_t cublasCher2(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const cuComplex       *alpha,
+#                            const cuComplex       *x, int incx,
+#                            const cuComplex       *y, int incy,
+#                            cuComplex       *A, int lda)
+# cublasStatus_t cublasZher2(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const cuDoubleComplex *alpha,
+#                            const cuDoubleComplex *x, int incx,
+#                            const cuDoubleComplex *y, int incy,
+#                            cuDoubleComplex *A, int lda)
+
+
+# cublasStatus_t cublasChpr(cublasHandle_t handle, cublasFillMode_t uplo,
+#                           int n, const float *alpha,
+#                           const cuComplex       *x, int incx,
+#                           cuComplex       *AP)
+# cublasStatus_t cublasZhpr(cublasHandle_t handle, cublasFillMode_t uplo,
+#                           int n, const double *alpha,
+#                           const cuDoubleComplex *x, int incx,
+#                           cuDoubleComplex *AP)
+
+
+# cublasStatus_t cublasChpr2(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const cuComplex       *alpha,
+#                            const cuComplex       *x, int incx,
+#                            const cuComplex       *y, int incy,
+#                            cuComplex       *AP)
+# cublasStatus_t cublasZhpr2(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            int n, const cuDoubleComplex *alpha,
+#                            const cuDoubleComplex *x, int incx,
+#                            const cuDoubleComplex *y, int incy,
+#                            cuDoubleComplex *AP)
+
 
 ## cuBLAS Level-3 Functions ##
 
