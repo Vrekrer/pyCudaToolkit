@@ -104,6 +104,8 @@ cublasGetVersion = libcublas.cublasGetVersion_v2
 cublasGetVersion.restype = cublasStatus_t
 cublasGetVersion.argtypes = [cublasHandle_t, POINTER(c_int)]
 
+# cublasStatus_t = cublasSetStream(cublasHandle_t handle, cudaStream_t streamId)
+# cublasStatus_t = cublasGetStream(cublasHandle_t handle, cudaStream_t *streamId)
 
 # cublasStatus_t cublasGetPointerMode(cublasHandle_t handle, cublasPointerMode_t *mode)
 cublasGetPointerMode = libcublas.cublasGetPointerMode_v2
@@ -114,6 +116,30 @@ cublasGetPointerMode.argtypes = [cublasHandle_t, POINTER(c_cublasPointerMode_t)]
 cublasSetPointerMode = libcublas.cublasSetPointerMode_v2
 cublasSetPointerMode.restype = cublasStatus_t
 cublasSetPointerMode.argtypes = [cublasHandle_t, c_cublasPointerMode_t]
+
+# cublasStatus_t cublasSetVector(int n, int elemSize,
+#                                const void *x, int incx, void *y, int incy)
+
+# cublasStatus_t cublasGetVector(int n, int elemSize,
+#                                const void *x, int incx, void *y, int incy)
+
+# cublasStatus_t cublasSetMatrix(int rows, int cols, int elemSize,
+#                                const void *A, int lda, void *B, int ldb)
+
+# cublasStatus_t cublasGetMatrix(int rows, int cols, int elemSize,
+#                                const void *A, int lda, void *B, int ldb)
+
+# cublasStatus_t cublasSetVectorAsync(int n, int elemSize, const void *hostPtr, int incx,
+#                                     void *devicePtr, int incy, cudaStream_t stream)
+
+# cublasStatus_t cublasGetVectorAsync(int n, int elemSize, const void *devicePtr, int incx,
+#                                     void *hostPtr, int incy, cudaStream_t stream)
+
+# cublasStatus_t cublasSetMatrixAsync(int rows, int cols, int elemSize, const void *A,
+#                                     int lda, void *B, int ldb, cudaStream_t stream)
+
+# cublasStatus_t cublasGetMatrixAsync(int rows, int cols, int elemSize, const void *A,
+#                                     int lda, void *B, int ldb, cudaStream_t stream)
 
 
 # cublasStatus_t cublasSetAtomicsMode(cublasHandlet handle, cublasAtomicsMode_t mode)
