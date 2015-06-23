@@ -63,6 +63,7 @@ class pycublasContext(object):
         
         self._castCheck = 'auto' #TODO better name to this
         self._returnToHost = True
+        self._autoCast = True
         
     def __del__(self):
         self.cublasStatus = pycublas.cublasDestroy(self._handle)
