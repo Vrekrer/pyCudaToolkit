@@ -764,8 +764,11 @@ cublasCtbmv = libcublas.cublasCtbmv_v2
 cublasZtbmv = libcublas.cublasZtbmv_v2
 for funct in [cublasStbmv, cublasDtbmv, cublasCtbmv, cublasZtbmv]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_cublasOperation_t, c_cublasDiagType_t,
+                      c_int, c_int,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int]
 
 # cublasStatus_t cublasStbsv(cublasHandle_t handle, cublasFillMode_t uplo,
 #                            cublasOperation_t trans, cublasDiagType_t diag,
@@ -789,8 +792,11 @@ cublasCtbsv = libcublas.cublasCtbsv_v2
 cublasZtbsv = libcublas.cublasZtbsv_v2
 for funct in [cublasStbsv, cublasDtbsv, cublasCtbsv, cublasZtbsv]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_cublasOperation_t, c_cublasDiagType_t,
+                      c_int, c_int,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int]
 
 # cublasStatus_t cublasStpmv(cublasHandle_t handle, cublasFillMode_t uplo,
 #                            cublasOperation_t trans, cublasDiagType_t diag,
@@ -814,8 +820,11 @@ cublasCtpmv = libcublas.cublasCtpmv_v2
 cublasZtpmv = libcublas.cublasZtpmv_v2
 for funct in [cublasStpmv, cublasDtpmv, cublasCtpmv, cublasZtpmv]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_cublasOperation_t, c_cublasDiagType_t,
+                      c_int,
+                      memory_pointer,
+                      memory_pointer, c_int]
 
 # cublasStatus_t cublasStrmv(cublasHandle_t handle, cublasFillMode_t uplo,
 #                            cublasOperation_t trans, cublasDiagType_t diag,
@@ -839,8 +848,11 @@ cublasCtrmv = libcublas.cublasCtrmv_v2
 cublasZtrmv = libcublas.cublasZtrmv_v2
 for funct in [cublasStrmv, cublasDtrmv, cublasCtrmv, cublasZtrmv]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_cublasOperation_t, c_cublasDiagType_t,
+                      c_int,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int]
 
 # cublasStatus_t cublasStrsv(cublasHandle_t handle, cublasFillMode_t uplo,
 #                            cublasOperation_t trans, cublasDiagType_t diag,
@@ -864,8 +876,11 @@ cublasCtrsv = libcublas.cublasCtrsv_v2
 cublasZtrsv = libcublas.cublasZtrsv_v2
 for funct in [cublasStrsv, cublasDtrsv, cublasCtrsv, cublasZtrsv]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_cublasOperation_t, c_cublasDiagType_t,
+                      c_int,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int]
 
 # cublasStatus_t cublasChemv(cublasHandle_t handle, cublasFillMode_t uplo,
 #                            int n, const cuComplex       *alpha,
@@ -896,8 +911,13 @@ cublasChemv = libcublas.cublasChemv_v2
 cublasZhemv = libcublas.cublasZhemv_v2
 for funct in [cublasChemv, cublasZhemv]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_int, c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int]
 
 # cublasStatus_t cublasChpmv(cublasHandle_t handle, cublasFillMode_t uplo,
 #                            int n, const cuComplex       *alpha,
@@ -915,8 +935,13 @@ cublasChpmv = libcublas.cublasChpmv_v2
 cublasZhpmv = libcublas.cublasZhpmv_v2
 for funct in [cublasChpmv, cublasZhpmv]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_int,
+                      scalar_pointer,
+                      memory_pointer,
+                      memory_pointer, c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int]
 
 # cublasStatus_t cublasCher(cublasHandle_t handle, cublasFillMode_t uplo,
 #                           int n, const float  *alpha,
@@ -930,8 +955,11 @@ cublasCher = libcublas.cublasCher_v2
 cublasZher = libcublas.cublasZher_v2
 for funct in [cublasCher, cublasZher]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int]
 
 # cublasStatus_t cublasCher2(cublasHandle_t handle, cublasFillMode_t uplo,
 #                            int n, const cuComplex       *alpha,
@@ -947,7 +975,12 @@ cublasCher2 = libcublas.cublasCher2_v2
 cublasZher2 = libcublas.cublasZher2_v2
 for funct in [cublasCher2, cublasZher2]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int]
 
 
 # cublasStatus_t cublasChpr(cublasHandle_t handle, cublasFillMode_t uplo,
@@ -962,8 +995,11 @@ cublasChpr = libcublas.cublasChpr_v2
 cublasZhpr = libcublas.cublasZhpr_v2
 for funct in [cublasChpr, cublasZhpr]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer]
 
 # cublasStatus_t cublasChpr2(cublasHandle_t handle, cublasFillMode_t uplo,
 #                            int n, const cuComplex       *alpha,
@@ -979,8 +1015,12 @@ cublasChpr2 = libcublas.cublasChpr2_v2
 cublasZhpr2 = libcublas.cublasZhpr2_v2
 for funct in [cublasChpr2, cublasZhpr2]:
     funct.restype = cublasStatus_t
-    #funct.argtypes = [cublasHandle_t,
-
+    funct.argtypes = [cublasHandle_t, c_cublasFillMode_t,
+                      c_int,
+                      scalar_pointer,
+                      memory_pointer, c_int,
+                      memory_pointer, c_int,
+                      memory_pointer]
 
 ## cuBLAS Level-3 Functions ##
 
