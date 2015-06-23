@@ -892,11 +892,9 @@ for funct in [cublasStrsv, cublasDtrsv, cublasCtrsv, cublasZtrsv]:
 #                           const cuDoubleComplex *x, int incx,
 #                           const cuDoubleComplex *beta,
 #                           cuDoubleComplex *y, int incy)
-cublasShemv = libcublas.cublasShemv_v2
-cublasDhemv = libcublas.cublasDhemv_v2
 cublasChemv = libcublas.cublasChemv_v2
 cublasZhemv = libcublas.cublasZhemv_v2
-for funct in [cublasShemv, cublasDhemv, cublasChemv, cublasZhemv]:
+for funct in [cublasChemv, cublasZhemv]:
     funct.restype = cublasStatus_t
     #funct.argtypes = [cublasHandle_t,
 
@@ -1065,10 +1063,10 @@ for funct in [cublasSgemm, cublasDgemm, cublasCgemm, cublasZgemm]:
 #                                   const cuDoubleComplex *Barray[], int ldb,
 #                                   const cuDoubleComplex *beta,
 #                                   cuDoubleComplex *Carray[], int ldc, int batchCount)
-cublasSgemmBatched = libcublas.cublasSgemmBatched_v2
-cublasDgemmBatched = libcublas.cublasDgemmBatched_v2
-cublasCgemmBatched = libcublas.cublasCgemmBatched_v2
-cublasZgemmBatched = libcublas.cublasZgemmBatched_v2
+cublasSgemmBatched = libcublas.cublasSgemmBatched
+cublasDgemmBatched = libcublas.cublasDgemmBatched
+cublasCgemmBatched = libcublas.cublasCgemmBatched
+cublasZgemmBatched = libcublas.cublasZgemmBatched
 for funct in [cublasSgemmBatched, cublasDgemmBatched, 
           cublasCgemmBatched, cublasZgemmBatched]:
     funct.restype = cublasStatus_t
@@ -1227,10 +1225,10 @@ for funct in [cublasSsyr2k, cublasDsyr2k, cublasCsyr2k, cublasZsyr2k]:
 #                             const cuDoubleComplex *B, int ldb,
 #                             const cuDoubleComplex *beta,
 #                             cuDoubleComplex *C, int ldc)
-cublasSsyrkx = libcublas.cublasSsyrkx_v2
-cublasDsyrkx = libcublas.cublasDsyrkx_v2
-cublasCsyrkx = libcublas.cublasCsyrkx_v2
-cublasZsyrkx = libcublas.cublasZsyrkx_v2
+cublasSsyrkx = libcublas.cublasSsyrkx
+cublasDsyrkx = libcublas.cublasDsyrkx
+cublasCsyrkx = libcublas.cublasCsyrkx
+cublasZsyrkx = libcublas.cublasZsyrkx
 for funct in [cublasSsyrkx, cublasDsyrkx, cublasCsyrkx, cublasZsyrkx]:
     funct.restype = cublasStatus_t
     #funct.argtypes = [cublasHandle_t,
@@ -1366,10 +1364,10 @@ for funct in [cublasStrsm, cublasDtrsm, cublasCtrsm, cublasZtrsm]:
 #                                    cuDoubleComplex *B[], 
 #                                    int ldb,
 #                                    int batchCount);
-cublasStrsmBatched = libcublas.cublasStrsmBatched_v2
-cublasDtrsmBatched = libcublas.cublasDtrsmBatched_v2
-cublasCtrsmBatched = libcublas.cublasCtrsmBatched_v2
-cublasZtrsmBatched = libcublas.cublasZtrsmBatched_v2
+cublasStrsmBatched = libcublas.cublasStrsmBatched
+cublasDtrsmBatched = libcublas.cublasDtrsmBatched
+cublasCtrsmBatched = libcublas.cublasCtrsmBatched
+cublasZtrsmBatched = libcublas.cublasZtrsmBatched
 for funct in [cublasStrsmBatched, cublasDtrsmBatched, 
               cublasCtrsmBatched, cublasZtrsmBatched]:
     funct.restype = cublasStatus_t
@@ -1459,8 +1457,8 @@ for funct in [cublasCher2k, cublasZher2k]:
 #                             const cuDoubleComplex *B, int ldb,
 #                             const double *beta,
 #                             cuDoubleComplex *C, int ldc)
-cublasCherkx = libcublas.cublasCherkx_v2
-cublasZherkx = libcublas.cublasZherkx_v2
+cublasCherkx = libcublas.cublasCherkx
+cublasZherkx = libcublas.cublasZherkx
 for funct in [cublasCherkx, cublasZherkx]:
     funct.restype = cublasStatus_t
     #funct.argtypes = [cublasHandle_t,
