@@ -72,7 +72,7 @@ class pycublasContext(object):
         '''
         True  : Automatic cast of arrays and scalars to the common dtype
         False : Do not check array dtypes,
-                scalars are casted to the first array dtype
+                scalars are always casted to the appropriate type
         '''
         return self._autoCast
     @autoCast.setter
@@ -83,12 +83,12 @@ class pycublasContext(object):
         '''
         args = self._AutoCaster(*args)
         return scalars as numpy.darrays and
-        return numpy.darrays as pycuda.gpuarray.GPUArray
+               arrays as pycuda.gpuarray.GPUArray
         '''
         if all( [_isScalar(x) for x in args] ):
             #all are scalars so we cast them to the same type
             _areComplex = any( [isinstance(x,complex) for x in args] )
-            new_dtype = {True:'complex128', False:'float64'}[_areComplex]
+            new_dtype = 'complex128' if _areComplex else 'float64'
             return [numpy.array([x], dtype=new_dtype) for x in args]
         elif not self.autoCast:
             #cast scalars to the fist array found
@@ -110,6 +110,15 @@ class pycublasContext(object):
             return [numpy.array([x], dtype=new_dtype) if _isScalar(x) 
                     else _toGPU(x, new_dtype) 
                     for x in args]
+
+    def _getOPs(self, *args):
+        op_dict = {'N': pycublas.cublasOperation_t.CUBLAS_OP_N,
+                   'T': pycublas.cublasOperation_t.CUBLAS_OP_T,
+                   'C': pycublas.cublasOperation_t.CUBLAS_OP_C}
+        if all([op in op_dict.keys() for op in args]):
+            return (op_dict[op] for op in args)
+        else:
+            raise ValueError("op must be 'N', 'T' or 'C'")
 
     @property
     def returnToHost(self):
@@ -417,22 +426,15 @@ class pycublasContext(object):
 
         op(A) = A    if op = 'N'
                 A.T  if op = 'T' (transpose)
-                A.H  if op = 'H' (complex transpose)
+                A.CT if op = 'C' (complex transpose)
 
         for op(A) with dimensions m rows x n columns
         x must have dimension n*incx and
         y must have dimension m*incy
         '''
-        (shape_op, ) = [1 if x=='N' else -1 for x in [op]]
+        shape_op = 1 if op=='N' else -1
+        (op,) = self._getOPs(op)
 
-        op_dict = {'N': pycublas.cublasOperation_t.CUBLAS_OP_N,
-                   'T': pycublas.cublasOperation_t.CUBLAS_OP_T,
-                   'H': pycublas.cublasOperation_t.CUBLAS_OP_C}
-        if op in op_dict.keys():
-            op = op_dict[op]
-        else:
-            ValueError("op must be 'N', 'T' or 'H'")
-            
         y, x, A, alpha, beta = self._AutoCaster(y, x, A, alpha, beta)
 
         m,n = A.shape
@@ -479,7 +481,7 @@ class pycublasContext(object):
 
         opX(X) = X    if opX = 'N'
                  X.T  if opX = 'T' (transpose)
-                 X.H  if opX = 'H' (complex transpose)
+                 X.CT if opX = 'C' (complex transpose)
 
         dimensions must be compatible
         opA(A) with m rows x k columns
@@ -487,15 +489,7 @@ class pycublasContext(object):
         C      with m rows x n columns
         '''
         (shape_opA, shape_opB) = [1 if x=='N' else -1 for x in [opA, opB]]
-        
-        op_dict = {'N': pycublas.cublasOperation_t.CUBLAS_OP_N,
-                   'T': pycublas.cublasOperation_t.CUBLAS_OP_T,
-                   'H': pycublas.cublasOperation_t.CUBLAS_OP_C}
-        if all([opA in op_dict.keys(), opB in op_dict.keys()]):
-            opA = op_dict[opA]
-            opB = op_dict[opB]
-        else:
-            ValueError("op must be 'N', 'T' or 'H'")
+        opA, opB = self._getOPs(opA, opB)
 
         C, A, B, alpha, beta = self._AutoCaster(C, A, B, alpha, beta)
 
