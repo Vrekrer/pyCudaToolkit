@@ -61,7 +61,6 @@ class pycublasContext(object):
         
         self.CheckStatusFunction = None
         
-        self._castCheck = 'auto' #TODO better name to this
         self._returnToHost = True
         self._autoCast = True
         
@@ -69,50 +68,48 @@ class pycublasContext(object):
         self.cublasStatus = pycublas.cublasDestroy(self._handle)
 
     @property
-    def castCheck(self):
-        ''' 
-        'auto'       : Automatic change of dtypes if required
-        'result'     : Cast all to result dtype
-        None, 'None' : Use result dtype, do not autocast
+    def autoCast(self):
         '''
-        return self._castCheck
-    @castCheck.setter
-    def castCheck(self, value):
-        if value not in ['auto', 'result', 'None', None]:
-            raise TypeError("castCheck must be 'auto', 'result' or 'None'")
-        else:
-            if value == None:
-                value = 'None'
-            self._castCheck = value
+        True  : Automatic cast of arrays and scalars to the common dtype
+        False : Do not check array dtypes,
+                scalars are casted to the first array dtype
+        '''
+        return self._autoCast
+    @autoCast.setter
+    def autoCast(self, value):
+        self._autoCast = bool(value)
             
-    def _caster(self, result, *args):
-        if self._castCheck == 'None':
-            # no autocast
-            return [numpy.array([x], dtype=result.dtype) if _isScalar(x) 
+    def _AutoCaster(self, *args):
+        '''
+        args = self._AutoCaster(*args)
+        return scalars as numpy.darrays and
+        return numpy.darrays as pycuda.gpuarray.GPUArray
+        '''
+        if all( [_isScalar(x) for x in args] ):
+            #all are scalars so we cast them to the same type
+            _areComplex = any( [isinstance(x,complex) for x in args] )
+            new_dtype = {True:'complex128', False:'float64'}[_areComplex]
+            return [numpy.array([x], dtype=new_dtype) for x in args]
+        elif not self.autoCast:
+            #cast scalars to the fist array found
+            new_dtype  = next( (x.dtype for x in args if _isArray(x)) )
+            return [numpy.array([x], dtype=new_dtype) if _isScalar(x)
                     else _toGPU(x, x.dtype) 
-                    for x in (result,) + args]
-        elif self._castCheck == 'result':
-            # cast to result.dtype
-            return [numpy.array([x], dtype=result.dtype) if _isScalar(x) 
-                    else _toGPU(x, result.dtype) 
-                    for x in (result,) + args]
-        elif self._castCheck == 'auto':
+                    for x in args]
+        else: #autoCast
             _areComplex = any( [isinstance(x,complex) if _isScalar(x) 
                                 else ('complex' in x.dtype.name)
-                                for x in (result,) + args] )
+                                for x in args] )
             _areSingle = all( [True if _isScalar(x) 
                               else x.dtype.name in ['float32','complex64']
-                              for x in (result,) + args] )
-            _areScalars = all( [_isScalar(x)
-                               for x in (result,) + args] )
-            _areSingle = _areSingle and not _areScalars
+                              for x in args] )
             new_dtype = {(False,True ):'float32',
                          (False,False):'float64',
                          (True, True ):'complex64',
                          (True, False):'complex128'}[(_areComplex, _areSingle)]
             return [numpy.array([x], dtype=new_dtype) if _isScalar(x) 
                     else _toGPU(x, new_dtype) 
-                    for x in (result,) + args]
+                    for x in args]
 
     @property
     def returnToHost(self):
@@ -252,7 +249,7 @@ class pycublasContext(object):
         '''
         Y = alpha * X + Y
         '''
-        Y, alpha, X = self._caster(Y, alpha, X)
+        Y, alpha, X = self._AutoCaster(Y, alpha, X)
 
         if _isOnGPU(alpha):
             self.pointerMode = 'DEVICE'
@@ -280,7 +277,7 @@ class pycublasContext(object):
         if cc (complex conjugate) = True
         X.Y*
         '''
-        Y, X = self._caster(Y, X)
+        Y, X = self._AutoCaster(Y, X)
         if 'float' in Y.dtype.name:  
             dot_function = {'float32' : pycublas.cublasSdot, 
                             'float64' : pycublas.cublasDdot
@@ -338,7 +335,7 @@ class pycublasContext(object):
 
         if c is complex, only the real part is used
         '''
-        Y, X, c, s = self._caster(Y, X, c, s)
+        Y, X, c, s = self._AutoCaster(Y, X, c, s)
         if 'float' in Y.dtype.name:
             dot_function = {'float32' : pycublas.cublasSrot,
                             'float64' : pycublas.cublasDrot
@@ -370,7 +367,7 @@ class pycublasContext(object):
 
         such that G.[a,b] = [r,0]
         '''
-        a, b = self._caster(a, b)
+        a, b = self._AutoCaster(a, b)
 
         if _isOnGPU(a) or _isOnGPU(b):
             self.pointerMode = 'DEVICE'
@@ -436,7 +433,7 @@ class pycublasContext(object):
         else:
             ValueError("op must be 'N', 'T' or 'H'")
             
-        y, x, A, alpha, beta = self._caster(y, x, A, alpha, beta)
+        y, x, A, alpha, beta = self._AutoCaster(y, x, A, alpha, beta)
 
         m,n = A.shape
         lda = m
@@ -500,7 +497,7 @@ class pycublasContext(object):
         else:
             ValueError("op must be 'N', 'T' or 'H'")
 
-        C, A, B, alpha, beta = self._caster(C, A, B, alpha, beta)
+        C, A, B, alpha, beta = self._AutoCaster(C, A, B, alpha, beta)
 
         m , k = A.shape[::shape_opA]
         kB, n = B.shape[::shape_opB]
