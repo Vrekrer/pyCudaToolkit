@@ -692,7 +692,66 @@ class pycublasContext(object):
                                            n, k,
                                            alpha.ptr,
                                            A.ptr, A.shape[0],
-                                           B.ptr, B.shape[0]
+                                           B.ptr, B.shape[0],
+                                           beta.ptr,
+                                           C.ptr, n)
+        return self._return(C)
+
+    #cublas_syrkx
+    def syr2k(self, alpha, A, B, beta, C, fillMode = 'U', op = 'N'):
+        '''
+        This function performs a variation of the symmetric rank-k update
+
+        C = alpha op(A) op(B).T + beta C
+
+        where
+        alpha and beta are scalars, C is a n x n symmetric matrix
+        stored in upper/lower mode (fillMode = 'U'/'L')
+        and op(A) and op(B) are matrices with dimensions n rows x k columns
+
+        for X = A or B
+        op(X) = X    if op = 'N'
+                X.T  if op = 'T' (transpose)
+
+        Only the selected triangular part of C (upper or lower)
+        will be used and returned.
+        If beta = 0 then C does not need to contain valid values.
+        
+        This routine can be used when B is in such way that the result 
+        is garanteed to be symmetric. An usual example is when the 
+        matrix B is a scaled form of the matrix A : this is equivalent to
+        B being the product of the matrix A and a diagonal matrix. 
+        For an efficient computation of the product of a regular matrix 
+        with a diagonal matrix, refer to the routine dgmm.
+        '''
+        shape_op = 1 if op=='N' else -1
+        (op,) = self._getOPs(op, valid = ['N', 'T'])
+        (fillMode,) = self._getFILL_MODEs(fillMode)
+        C, alpha, A, B, beta = self._AutoCaster(C, alpha, A, B, beta)
+
+        n, k = A.shape[::shape_op]
+        if any(C.shape != (n,n), B.shape != A.shape):
+            raise ValueError('The matrices have incompatible dimensions')
+
+        if any([_isOnGPU(alpha), _isOnGPU(beta)]):
+            self.pointerMode = 'DEVICE'
+            alpha = _toGPU(alpha, C.dtype)
+            beta  = _toGPU(beta, C.dtype)
+        else:
+            self.pointerMode = 'HOST'
+            alpha = _ndarray_ptr(alpha)
+            beta  = _ndarray_ptr(beta)
+        syrkx_function = {'float32'    : pycublas.cublasSsyrkx,
+                          'float64'    : pycublas.cublasDsyrkx,
+                          'complex64'  : pycublas.cublasCsyrkx,
+                          'complex128' : pycublas.cublasZsyrkx
+                          }[C.dtype.name]
+        self.cublasStatus = syrkx_function(self._handle,
+                                           fillMode.value, op.value,
+                                           n, k,
+                                           alpha.ptr,
+                                           A.ptr, A.shape[0],
+                                           B.ptr, B.shape[0],
                                            beta.ptr,
                                            C.ptr, n)
         return self._return(C)
