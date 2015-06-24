@@ -562,7 +562,6 @@ class pycublasContext(object):
         Only the selected triangular part of A (upper or lower) will be used.
         If beta = 0 then C does not need to contain valid values.
         '''
-        pass
         shape_side = 0 if side=='L' else 1
         (side,) = self._getSIDESs(side)
         (fillMode,) = self._getFILL_MODEs(fillMode)
@@ -594,4 +593,53 @@ class pycublasContext(object):
                                           B.ptr, m,
                                           beta.ptr,
                                           C.ptr, m)
+        return self._return(C)
+
+    #cublas_syrk
+    def syrk(self, alpha, A, beta, C, fillMode = 'U', op = 'N'):
+        '''
+        This function performs the symmetric rank-k update
+
+        C = alpha op(A) op(A).T + beta C
+
+        where 
+        alpha and beta are scalars, C is a n x n symmetric matrix
+        stored in upper/lower mode (fillMode = 'U'/'L')
+        and op(A) is a matrix with dimensions n rows x k columns
+
+        op(A) = A    if op = 'N'
+                A.T  if op = 'T' (transpose)
+
+        Only the selected triangular part of C (upper or lower) will be used.
+        If beta = 0 then C does not need to contain valid values.
+        '''
+        shape_op = 1 if op=='N' else -1
+        (op,) = self._getOPs(op, valid = ['N', 'T'])
+        (fillMode,) = self._getFILL_MODEs(fillMode)
+        C, alpha, A, beta = self._AutoCaster(C, alpha, A, beta)
+
+        n, k = A.shape[::shape_op]
+        if C.shape != (n,n):
+            raise ValueError('The matrices have incompatible dimensions')
+
+        if any([_isOnGPU(alpha), _isOnGPU(beta)]):
+            self.pointerMode = 'DEVICE'
+            alpha = _toGPU(alpha, C.dtype)
+            beta  = _toGPU(beta, C.dtype)
+        else:
+            self.pointerMode = 'HOST'
+            alpha = _ndarray_ptr(alpha)
+            beta  = _ndarray_ptr(beta)
+        syrk_function = {'float32'    : pycublas.cublasSsyrk,
+                         'float64'    : pycublas.cublasDsyrk,
+                         'complex64'  : pycublas.cublasCsyrk,
+                         'complex128' : pycublas.cublasZsyrk
+                         }[C.dtype.name]
+        self.cublasStatus = syrk_function(self._handle,
+                                          fillMode.value, op.value,
+                                          n, k,
+                                          alpha.ptr,
+                                          A.ptr, A.shape[0],
+                                          beta.ptr,
+                                          C.ptr, n)
         return self._return(C)
