@@ -123,6 +123,22 @@ class pycublasContext(object):
                            " or '%s'" % valid_keys[-1]
             raise ValueError("op must be %s" % valid_string)
 
+    def _getSIDESs(self, *args):
+        side_dict = {'L': pycublas.cublasSideMode_t.CUBLAS_SIDE_LEFT,
+                     'R': pycublas.cublasSideMode_t.CUBLAS_SIDE_RIGHT}
+        if all([side in side_dict.keys() for side in args]):
+            return (side_dict[side] for side in args)
+        else:
+            raise ValueError("side must be 'L' (left) or 'R' (rigth)")
+            
+    def _getFILL_MODEs(self, *args):
+        fm_dict = {'U': pycublas.cublasFillMode_t.CUBLAS_FILL_MODE_UPPER,
+                   'L': pycublas.cublasFillMode_t.CUBLAS_FILL_MODE_LOWER}
+        if all([fm in fm_dict.keys() for fm in args]):
+            return (fm_dict[fm] for fm in args)
+        else:
+            raise ValueError("fillMode must be 'U' (upper) or 'L' (lower)")
+
     @property
     def returnToHost(self):
         '''
@@ -479,7 +495,7 @@ class pycublasContext(object):
         
         C = alpha opA(A) opA(B) + beta C
         
-        where alpha and beta are scalars, and A, B and C are matrices
+        where alpha and beta are scalars, and A, B and C are matrices.
         Also, for matrix X = A or B
 
         opX(X) = X    if opX = 'N'
@@ -490,16 +506,17 @@ class pycublasContext(object):
         opA(A) with m rows x k columns
         opB(B) with k rows x n columns
         C      with m rows x n columns
+
+        If beta = 0 then C does not need to contain valid values.
         '''
         (shape_opA, shape_opB) = [1 if x=='N' else -1 for x in [opA, opB]]
         opA, opB = self._getOPs(opA, opB)
-
         C, A, B, alpha, beta = self._AutoCaster(C, A, B, alpha, beta)
 
         m , k = A.shape[::shape_opA]
         kB, n = B.shape[::shape_opB]
         if any([C.shape != (m,n), k != kB]):
-            raise ValueError('Matrices have incompatible dimensions')
+            raise ValueError('The matrices have incompatible dimensions')
         
         if any([_isOnGPU(alpha), _isOnGPU(beta)]):
             self.pointerMode = 'DEVICE'
@@ -527,7 +544,54 @@ class pycublasContext(object):
     #TODO cublas_gemmBatched
     
     #cublas_symm
-    def symm(self, alpha, A, B, beta, C, opA = 'N', opB = 'N'):
+    def symm(self, alpha, A, B, beta, C, side = 'L', fillMode = 'U'):
         '''
         This function performs the symmetric matrix-matrix multiplication
+
+        C = alpha A B + beta C    if side = 'L' (left) or
+        C = alpha B A + beta C    if side = 'R' (rigth)
+        
+        where 
+        A is a symmetric matrix stored in upper/lower mode (fillMode = 'U'/'L')
+        B and C are m rows x n columns matrices, and alpha and beta are scalars
+        
+        The dimension of A must be
+           m x m  if side = 'L' and
+           n x n  if side = 'R'
+           
+        Only the selected triangular part of A (upper or lower) will be used.
+        If beta = 0 then C does not need to contain valid values.
         '''
+        pass
+        shape_side = 0 if side=='L' else 1
+        (side,) = self._getSIDESs(side)
+        (fillMode,) = self._getFILL_MODEs(fillMode)
+        C, alpha, A, B, beta = self._AutoCaster(C, alpha, A, B, beta)
+        
+        m,n  = C.shape
+        lda = (m, n)[shape_side]
+        if any([C.shape != B.shape, A.shape != (lda, lda)]):
+            raise ValueError('The matrices have incompatible dimensions')
+
+        if any([_isOnGPU(alpha), _isOnGPU(beta)]):
+            self.pointerMode = 'DEVICE'
+            alpha = _toGPU(alpha, C.dtype)
+            beta  = _toGPU(beta, C.dtype)
+        else:
+            self.pointerMode = 'HOST'
+            alpha = _ndarray_ptr(alpha)
+            beta  = _ndarray_ptr(beta)
+        symm_function = {'float32'    : pycublas.cublasSsymm,
+                         'float64'    : pycublas.cublasDsymm,
+                         'complex64'  : pycublas.cublasCsymm,
+                         'complex128' : pycublas.cublasZsymm
+                         }[C.dtype.name]
+        self.cublasStatus = symm_function(self._handle, 
+                                          side.value, fillMode.value,
+                                          m, n,
+                                          alpha.ptr,
+                                          A.ptr, lda,
+                                          B.ptr, m,
+                                          beta.ptr,
+                                          C.ptr, m)
+        return self._return(C)
