@@ -130,7 +130,7 @@ class pycublasContext(object):
             return (side_dict[side] for side in args)
         else:
             raise ValueError("side must be 'L' (left) or 'R' (rigth)")
-            
+
     def _getFILL_MODEs(self, *args):
         fm_dict = {'U': pycublas.cublasFillMode_t.CUBLAS_FILL_MODE_UPPER,
                    'L': pycublas.cublasFillMode_t.CUBLAS_FILL_MODE_LOWER}
@@ -138,6 +138,14 @@ class pycublasContext(object):
             return (fm_dict[fm] for fm in args)
         else:
             raise ValueError("fillMode must be 'U' (upper) or 'L' (lower)")
+
+    def _getDIAGs(self, *args):
+        diag_dict = {'N': pycublas.cublasDiagType_t.CUBLAS_DIAG_NON_UNIT,
+                     'U': pycublas.cublasDiagType_t.CUBLAS_DIAG_UNIT}
+        if all([diag in diag_dict.keys() for diag in args]):
+            return (diag_dict[diag] for diag in args)
+        else:
+            raise ValueError("diag must be 'U' (unit) or 'N' (non unit)")
 
     @property
     def returnToHost(self):
@@ -452,9 +460,11 @@ class pycublasContext(object):
         y must have dimension m*incy
         '''
         shape_op = 1 if op=='N' else -1
+        op_type = 1.0j if op == 'C' else 1
         (op,) = self._getOPs(op)
 
-        y, x, A, alpha, beta = self._AutoCaster(y, x, A, alpha, beta)
+        y, x, A, alpha, beta, op_type = self._AutoCaster(y, x, A, alpha, beta,
+                                                         op_type)
 
         m,n = A.shape
         lda = m
@@ -510,8 +520,10 @@ class pycublasContext(object):
         If beta = 0 then C does not need to contain valid values.
         '''
         (shape_opA, shape_opB) = [1 if x=='N' else -1 for x in [opA, opB]]
+        op_type = 1.0j if 'C' in [opA, opB] else 1
         opA, opB = self._getOPs(opA, opB)
-        C, A, B, alpha, beta = self._AutoCaster(C, A, B, alpha, beta)
+        C, A, B, alpha, beta, op_type = self._AutoCaster(C, A, B, alpha, beta,
+                                                         op_type)
 
         m , k = A.shape[::shape_opA]
         kB, n = B.shape[::shape_opB]
@@ -671,7 +683,7 @@ class pycublasContext(object):
         C, alpha, A, B, beta = self._AutoCaster(C, alpha, A, B, beta)
 
         n, k = A.shape[::shape_op]
-        if any(C.shape != (n,n), B.shape != A.shape):
+        if any([C.shape != (n,n), B.shape != A.shape]):
             raise ValueError('The matrices have incompatible dimensions')
 
         if any([_isOnGPU(alpha), _isOnGPU(beta)]):
@@ -698,7 +710,7 @@ class pycublasContext(object):
         return self._return(C)
 
     #cublas_syrkx
-    def syr2k(self, alpha, A, B, beta, C, fillMode = 'U', op = 'N'):
+    def syrkx(self, alpha, A, B, beta, C, fillMode = 'U', op = 'N'):
         '''
         This function performs a variation of the symmetric rank-k update
 
@@ -730,7 +742,7 @@ class pycublasContext(object):
         C, alpha, A, B, beta = self._AutoCaster(C, alpha, A, B, beta)
 
         n, k = A.shape[::shape_op]
-        if any(C.shape != (n,n), B.shape != A.shape):
+        if any([C.shape != (n,n), B.shape != A.shape]):
             raise ValueError('The matrices have incompatible dimensions')
 
         if any([_isOnGPU(alpha), _isOnGPU(beta)]):
@@ -754,4 +766,66 @@ class pycublasContext(object):
                                            B.ptr, B.shape[0],
                                            beta.ptr,
                                            C.ptr, n)
+        return self._return(C)
+
+    #cublas_trmm
+    def trmm(self, alpha, A, B, C, 
+             side = 'L', fillMode = 'U', op = 'N', diag = 'N'):
+        '''
+        This function performs the triangular matrix-matrix multiplication
+
+        C = alpha op(A) B    if side = 'L' (left) or
+        C = alpha B op(A)    if side = 'R' (rigth)
+
+        where
+        Alpha and beta are scalars, B and C are m rows x n columns matrices and
+        A is a triangular matrix stored in upper/lower mode (fillMode = 'U'/'L')
+        with or without the main diagonal. Also, for matrix A
+
+        op(A) = A    if op = 'N'
+                A.T  if op = 'T' (transpose)
+                A.CT if op = 'C' (complex transpose)
+
+        A is assumed to be unit triangular     if diag = 'U'
+        A is not assumed to be unit triangular if diag = 'N'
+
+        The dimension of op(A) must be
+           m x m  if side = 'L' and
+           n x n  if side = 'R'
+
+        Only the selected triangular part of A (upper or lower) will be used.
+        C is used only to write the results.
+        B can be repeted as C parameter to write the results into B
+        '''
+        shape_side = 0 if side=='L' else 1
+        op_type = 1.0j if op == 'C' else 1
+        (op,) = self._getOPs(op)
+        (side,) = self._getSIDESs(side)
+        (fillMode,) = self._getFILL_MODEs(fillMode)
+        (diag,) = self._getDIAGs(diag)
+        C, alpha, A, B, op_type = self._AutoCaster(C, alpha, A, B, op_type)
+
+        m, n = B.shape
+        lda = B.shape[shape_side]
+        if any([C.shape != (m,n), A.shape != (lda,lda)]):
+            raise ValueError('The matrices have incompatible dimensions')
+
+        if _isOnGPU(alpha):
+            self.pointerMode = 'DEVICE'
+        else:
+            self.pointerMode = 'HOST'
+            alpha = _ndarray_ptr(alpha)
+        trmm_function = {'float32'    : pycublas.cublasStrmm,
+                         'float64'    : pycublas.cublasDtrmm,
+                         'complex64'  : pycublas.cublasCtrmm,
+                         'complex128' : pycublas.cublasZtrmm
+                         }[C.dtype.name]
+        self.cublasStatus = trmm_function(self._handle,
+                                          side.value, fillMode.value,
+                                          op.value, diag.value,
+                                          m, n,
+                                          alpha.ptr,
+                                          A.ptr, lda,
+                                          B.ptr, m,
+                                          C.ptr, m)
         return self._return(C)
