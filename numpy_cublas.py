@@ -778,7 +778,7 @@ class pycublasContext(object):
         C = alpha B op(A)    if side = 'R' (rigth)
 
         where
-        Alpha and beta are scalars, B and C are m rows x n columns matrices and
+        alpha is a scalars, B and C are m rows x n columns matrices and
         A is a triangular matrix stored in upper/lower mode (fillMode = 'U'/'L')
         with or without the main diagonal. Also, for matrix A
 
@@ -829,3 +829,67 @@ class pycublasContext(object):
                                           B.ptr, m,
                                           C.ptr, m)
         return self._return(C)
+
+    #cublas_trsm
+    def trsm(self, alpha, A, B,
+             side = 'L', fillMode = 'U', op = 'N', diag = 'N'):
+        '''
+        This function solves the triangular linear system with 
+        multiple right-hand-sides
+
+        op(A) X = alpha B    if side = 'L' (left) or
+        op(A) X = alpha B    if side = 'R' (rigth)
+
+        where
+        alpha is a scalar, A is a triangular matrix stored in upper/lower mode 
+        (fillMode = 'U'/'L') with or without the main diagonal,
+        B and X are m rows x n columns matrices.
+        Also, for matrix A
+
+        op(A) = A    if op = 'N'
+                A.T  if op = 'T' (transpose)
+                A.CT if op = 'C' (complex transpose)
+
+        A is assumed to be unit triangular     if diag = 'U'
+        A is not assumed to be unit triangular if diag = 'N'
+
+        The dimension of op(A) must be
+           m x m  if side = 'L' and
+           n x n  if side = 'R'
+           
+        Only the selected triangular part of A (upper or lower) will be used.
+        The solution X overwrites the right-hand-sides B on exit.
+        
+        No test for singularity or near-singularity is included in this function.
+        '''
+        shape_side = 0 if side=='L' else 1
+        op_type = 1.0j if op == 'C' else 1
+        (op,) = self._getOPs(op)
+        (side,) = self._getSIDESs(side)
+        (fillMode,) = self._getFILL_MODEs(fillMode)
+        (diag,) = self._getDIAGs(diag)
+        alpha, A, B, op_type = self._AutoCaster(alpha, A, B, op_type)
+
+        m, n = B.shape
+        lda = B.shape[shape_side]
+        if A.shape != (lda,lda):
+            raise ValueError('The matrices have incompatible dimensions')
+
+        if _isOnGPU(alpha):
+            self.pointerMode = 'DEVICE'
+        else:
+            self.pointerMode = 'HOST'
+            alpha = _ndarray_ptr(alpha)
+        trsm_function = {'float32'    : pycublas.cublasStrsm,
+                         'float64'    : pycublas.cublasDtrsm,
+                         'complex64'  : pycublas.cublasCtrsm,
+                         'complex128' : pycublas.cublasZtrsm
+                         }[C.dtype.name]
+        self.cublasStatus = trsm_function(self._handle,
+                                          side.value, fillMode.value,
+                                          op.value, diag.value,
+                                          m, n,
+                                          alpha.ptr,
+                                          A.ptr, lda,
+                                          B.ptr, m)
+        return self._return(B)
