@@ -15,7 +15,9 @@ from ctypes import *
 
 ### cuBLAS Library ###
 libname = ctypes.util.find_library('cublas')
-if platform.system()=='Microsoft': 
+#para windows en 64bit
+#libname = ctypes.util.find_library('cublas64_70')
+if platform.system()=='Windows': 
     libcublas = ctypes.windll.LoadLibrary(libname)
 elif platform.system()=='Linux':     
     libcublas = ctypes.CDLL(libname, ctypes.RTLD_GLOBAL)
@@ -120,15 +122,32 @@ cublasSetPointerMode.argtypes = [cublasHandle_t, c_cublasPointerMode_t]
 
 # cublasStatus_t cublasSetVector(int n, int elemSize,
 #                                const void *x, int incx, void *y, int incy)
+#aunque las funciones no aparescan en el autocompletado se pueden llamar
+cublasSetVector = libcublas.cublasSetVector
+cublasSetVector.restype = cublasStatus_t
+#por verificar
+cublasSetVector.argtypes = [c_int, c_int, memory_pointer, c_int, memory_pointer, c_int]
 
 # cublasStatus_t cublasGetVector(int n, int elemSize,
 #                                const void *x, int incx, void *y, int incy)
+cublasGetVector = libcublas.cublasGetVector
+cublasGetVector.restype = cublasStatus_t
+cublasGetVector.argtypes = [c_int, c_int, memory_pointer, c_int, memory_pointer, c_int]
+
 
 # cublasStatus_t cublasSetMatrix(int rows, int cols, int elemSize,
 #                                const void *A, int lda, void *B, int ldb)
+cublasSetMatrix = libcublas.cublasSetMatrix
+cublasSetMatrix.restype = cublasStatus_t
+cublasSetMatrix.argtypes = [c_int, c_int, c_int, memory_pointer, c_int, memory_pointer, c_int]
+
 
 # cublasStatus_t cublasGetMatrix(int rows, int cols, int elemSize,
 #                                const void *A, int lda, void *B, int ldb)
+cublasGetMatrix = libcublas.cublasGetMatrix
+cublasGetMatrix.restype = cublasStatus_t
+cublasGetMatrix.argtypes = [c_int, c_int, c_int, memory_pointer, c_int, memory_pointer, c_int]
+
 
 # cublasStatus_t cublasSetVectorAsync(int n, int elemSize, const void *hostPtr, int incx,
 #                                     void *devicePtr, int incy, cudaStream_t stream)
