@@ -884,7 +884,7 @@ class pycublasContext(object):
                          'float64'    : pycublas.cublasDtrsm,
                          'complex64'  : pycublas.cublasCtrsm,
                          'complex128' : pycublas.cublasZtrsm
-                         }[C.dtype.name]
+                         }[A.dtype.name]
         self.cublasStatus = trsm_function(self._handle,
                                           side.value, fillMode.value,
                                           op.value, diag.value,
