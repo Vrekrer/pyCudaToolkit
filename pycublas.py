@@ -122,32 +122,29 @@ cublasSetPointerMode.argtypes = [cublasHandle_t, c_cublasPointerMode_t]
 
 # cublasStatus_t cublasSetVector(int n, int elemSize,
 #                                const void *x, int incx, void *y, int incy)
-#aunque las funciones no aparescan en el autocompletado se pueden llamar
-cublasSetVector = libcublas.cublasSetVector
-cublasSetVector.restype = cublasStatus_t
-#por verificar
-cublasSetVector.argtypes = [c_int, c_int, memory_pointer, c_int, memory_pointer, c_int]
-
 # cublasStatus_t cublasGetVector(int n, int elemSize,
 #                                const void *x, int incx, void *y, int incy)
+cublasSetVector = libcublas.cublasSetVector
 cublasGetVector = libcublas.cublasGetVector
-cublasGetVector.restype = cublasStatus_t
-cublasGetVector.argtypes = [c_int, c_int, memory_pointer, c_int, memory_pointer, c_int]
-
+for funct in [cublasSetVector, cublasGetVector]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [c_int, c_int,          #n, elemSize
+                      memory_pointer, c_int, #*x, incx
+                      memory_pointer, c_int  #*y, incy
+                      ]
 
 # cublasStatus_t cublasSetMatrix(int rows, int cols, int elemSize,
 #                                const void *A, int lda, void *B, int ldb)
-cublasSetMatrix = libcublas.cublasSetMatrix
-cublasSetMatrix.restype = cublasStatus_t
-cublasSetMatrix.argtypes = [c_int, c_int, c_int, memory_pointer, c_int, memory_pointer, c_int]
-
-
 # cublasStatus_t cublasGetMatrix(int rows, int cols, int elemSize,
 #                                const void *A, int lda, void *B, int ldb)
+cublasSetMatrix = libcublas.cublasSetMatrix
 cublasGetMatrix = libcublas.cublasGetMatrix
-cublasGetMatrix.restype = cublasStatus_t
-cublasGetMatrix.argtypes = [c_int, c_int, c_int, memory_pointer, c_int, memory_pointer, c_int]
-
+for funct in [cublasSetMatrix, cublasGetMatrix]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [c_int, c_int, c_int,   #rows, cols, elemSize
+                      memory_pointer, c_int, #*A, incx
+                      memory_pointer, c_int  #*B, incy
+                      ]
 
 # cublasStatus_t cublasSetVectorAsync(int n, int elemSize, const void *hostPtr, int incx,
 #                                     void *devicePtr, int incy, cudaStream_t stream)
