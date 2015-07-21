@@ -15,7 +15,9 @@ from ctypes import *
 
 ### cuBLAS Library ###
 libname = ctypes.util.find_library('cublas')
-if platform.system()=='Microsoft': 
+#para windows en 64bit
+#libname = ctypes.util.find_library('cublas64_70')
+if platform.system()=='Windows': 
     libcublas = ctypes.windll.LoadLibrary(libname)
 elif platform.system()=='Linux':     
     libcublas = ctypes.CDLL(libname, ctypes.RTLD_GLOBAL)
@@ -120,15 +122,29 @@ cublasSetPointerMode.argtypes = [cublasHandle_t, c_cublasPointerMode_t]
 
 # cublasStatus_t cublasSetVector(int n, int elemSize,
 #                                const void *x, int incx, void *y, int incy)
-
 # cublasStatus_t cublasGetVector(int n, int elemSize,
 #                                const void *x, int incx, void *y, int incy)
+cublasSetVector = libcublas.cublasSetVector
+cublasGetVector = libcublas.cublasGetVector
+for funct in [cublasSetVector, cublasGetVector]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [c_int, c_int,          #n, elemSize
+                      memory_pointer, c_int, #*x, incx
+                      memory_pointer, c_int  #*y, incy
+                      ]
 
 # cublasStatus_t cublasSetMatrix(int rows, int cols, int elemSize,
 #                                const void *A, int lda, void *B, int ldb)
-
 # cublasStatus_t cublasGetMatrix(int rows, int cols, int elemSize,
 #                                const void *A, int lda, void *B, int ldb)
+cublasSetMatrix = libcublas.cublasSetMatrix
+cublasGetMatrix = libcublas.cublasGetMatrix
+for funct in [cublasSetMatrix, cublasGetMatrix]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [c_int, c_int, c_int,   #rows, cols, elemSize
+                      memory_pointer, c_int, #*A, incx
+                      memory_pointer, c_int  #*B, incy
+                      ]
 
 # cublasStatus_t cublasSetVectorAsync(int n, int elemSize, const void *hostPtr, int incx,
 #                                     void *devicePtr, int incy, cudaStream_t stream)
