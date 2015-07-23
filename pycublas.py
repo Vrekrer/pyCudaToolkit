@@ -17,6 +17,8 @@ from ctypes import *
 libname = ctypes.util.find_library('cublas')
 #para windows en 64bit
 #libname = ctypes.util.find_library('cublas64_70')
+#dependiendo de la version de CUDA el nombre de la libreria
+#cambiara por ejemplo cublas32_60
 if platform.system()=='Windows': 
     libcublas = ctypes.windll.LoadLibrary(libname)
 elif platform.system()=='Linux':     
@@ -1724,4 +1726,255 @@ for funct in [cublasCherkx, cublasZherkx]:
 #    print '    funct.restype = cublasStatus_t'
 #    print '    #funct.argtypes = [cublasHandle_t,'
 
+
+#cublasStatus_t cublasSgeam(cublasHandle_t handle,
+#                           cublasOperation_t transa, cublasOperation_t transb,
+#                           int m, int n,
+#                           const float *alpha,
+#                           const float *A, int lda,
+#                           const float *beta,
+#                           const float *B, int ldb,
+#                           float *C, int ldc)
+#cublasStatus_t cublasDgeam(cublasHandle_t handle,
+#                           cublasOperation_t transa, cublasOperation_t transb,
+#                           int m, int n,
+#                           const double *alpha,
+#                           const double *A, int lda,
+#                           const double *beta,
+#                           const double *B, int ldb,
+#                           double *C, int ldc)
+#cublasStatus_t cublasCgeam(cublasHandle_t handle,
+#                           cublasOperation_t transa, cublasOperation_t transb,
+#                           int m, int n,
+#                           const cuComplex *alpha,
+#                           const cuComplex *A, int lda,
+#                           const cuComplex *beta ,
+#                           const cuComplex *B, int ldb,
+#                           cuComplex *C, int ldc)
+#cublasStatus_t cublasZgeam(cublasHandle_t handle,
+#                           cublasOperation_t transa, cublasOperation_t transb,
+#                           int m, int n,
+#                           const cuDoubleComplex *alpha,
+#                           const cuDoubleComplex *A, int lda,
+#                           const cuDoubleComplex *beta,
+#                           const cuDoubleComplex *B, int ldb,
+#                           cuDoubleComplex *C, int ldc)
+cublasSgeam = libcublas.cublasSgeam 
+cublasDgeam = libcublas.cublasDgeam
+cublasCgeam = libcublas.cublasCgeam
+cublasZgeam = libcublas.cublasZgeam
+for funct in [cublasSgeam, cublasDgeam, cublasCgeam, cublasZgeam]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t,
+                      c_cublasOperation_t,   #trans
+                      c_cublasOperation_t,   #transb
+                      c_int, c_int,          #m, n
+                      scalar_pointer,        #*alpha
+                      memory_pointer, c_int, #*A, lda
+                      scalar_pointer,        #*beta
+                      memory_pointer, c_int, #*B, ldb
+                      memory_pointer, c_int  #*C, ldc
+                      ]
+
+
+#cublasStatus_t cublasSdgmm(cublasHandle_t handle, cublasSideMode_t mode,
+#                           int m, int n,
+#                           const float *A, int lda,
+#                           const float *x, int incx,
+#                           float *C, int ldc)
+#cublasStatus_t cublasDdgmm(cublasHandle_t handle, cublasSideMode_t mode,
+#                           int m, int n,
+#                           const double *A, int lda,
+#                           const double *x, int incx,
+#                           double *C, int ldc)
+#cublasStatus_t cublasCdgmm(cublasHandle_t handle, cublasSideMode_t mode,
+#                           int m, int n,
+#                           const cuComplex *A, int lda,
+#                           const cuComplex *x, int incx,
+#                           cuComplex *C, int ldc)
+#cublasStatus_t cublasZdgmm(cublasHandle_t handle, cublasSideMode_t mode,
+#                           int m, int n,
+#                           const cuDoubleComplex *A, int lda,
+#                           const cuDoubleComplex *x, int incx,
+#                           cuDoubleComplex *C, int ldc)
+cublasSdgmm = libcublas.cublasSdgmm 
+cublasDdgmm = libcublas.cublasDdgmm
+cublasCdgmm = libcublas.cublasCdgmm
+cublasZdgmm = libcublas.cublasZdgmm
+for funct in [cublasSdgmm, cublasDdgmm, cublasCdgmm, cublasZdgmm]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t,
+                      c_cublasSideMode_t,    #mode
+                      c_int, c_int,          #m, n
+                      memory_pointer, c_int, #*A, lda
+                      memory_pointer, c_int, #*x, incx
+                      memory_pointer, c_int  #*C, ldc
+                      ]
+
+
+#cublasStatus_t cublasSgetrfBatched(cublasHandle_t handle,
+#                                   int n,
+#                                   float *Aarray[],
+#                                   int lda,
+#                                   int *PivotArray,
+#                                   int *infoArray,
+#                                   int batchSize);
+#cublasStatus_t cublasDgetrfBatched(cublasHandle_t handle,
+#                                   int n,
+#                                   double *Aarray[],
+#                                   int lda,
+#                                   int *PivotArray,
+#                                   int *infoArray,
+#                                   int batchSize);
+#cublasStatus_t cublasCgetrfBatched(cublasHandle_t handle,
+#                                   int n,
+#                                   cuComplex *Aarray[],
+#                                   int lda,
+#                                   int *PivotArray,
+#                                   int *infoArray,
+#                                   int batchSize);
+#cublasStatus_t cublasZgetrfBatched(cublasHandle_t handle,
+#                                   int n,
+#                                   cuDoubleComplex *Aarray[],
+#                                   int lda,
+#                                   int *PivotArray,
+#                                   int *infoArray,
+#                                   int batchSize);
+cublasSgetrfBatched = libcublas.cublasSgetrfBatched 
+cublasDgetrfBatched = libcublas.cublasDgetrfBatched
+cublasCgetrfBatched = libcublas.cublasCgetrfBatched
+cublasZgetrfBatched = libcublas.cublasZgetrfBatched
+for funct in [cublasSgetrfBatched, cublasDgetrfBatched, cublasCgetrfBatched, cublasZgetrfBatched]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t,
+                      c_int,                 #n
+                      array_pointer,         #*Aarray[]
+                      c_int,                 #lda
+                      scalar_pointer,        #*PivotArray
+                      scalar_pointer,        #*infoArray
+                      c_int                  #batchSize
+                      ]
+
+#cublasStatus_t cublasSgetrsBatched(cublasHandle_t handle,
+#                                   cublasOperation_t trans,
+#                                   int n,
+#                                   int nrhs,
+#                                   const float *Aarray[],
+#                                   int lda,
+#                                   const int *devIpiv,
+#                                   float *Barray[],
+#                                   int ldb,
+#                                   int *info,
+#                                   int batchSize);
+#cublasStatus_t cublasDgetrsBatched(cublasHandle_t handle,
+#                                   cublasOperation_t trans,
+#                                   int n,
+#                                   int nrhs,
+#                                   const double *Aarray[],
+#                                   int lda,
+#                                   const int *devIpiv,
+#                                   double *Barray[],
+#                                   int ldb,
+#                                   int *info,
+#                                   int batchSize);
+#cublasStatus_t cublasCgetrsBatched(cublasHandle_t handle,
+#                                   cublasOperation_t trans,
+#                                   int n,
+#                                   int nrhs,
+#                                   const cuComplex *Aarray[],
+#                                   int lda,
+#                                   const int *devIpiv,
+#                                   cuComplex *Barray[],
+#                                   int ldb,
+#                                   int *info,
+#                                   int batchSize);
+#cublasStatus_t cublasZgetrsBatched(cublasHandle_t handle,
+#                                   cublasOperation_t trans,
+#                                   int n,
+#                                   int nrhs,
+#                                   const cuDoubleComplex *Aarray[],
+#                                   int lda,
+#                                   const int *devIpiv,
+#                                   cuDoubleComplex *Barray[],
+#                                   int ldb,
+#                                   int *info,
+#                                   int batchSize);
+cublasSgetrsBatched = libcublas.cublasSgetrsBatched
+cublasDgetrsBatched = libcublas.cublasDgetrsBatched
+cublasCgetrsBatched = libcublas.cublasCgetrsBatched
+cublasZgetrsBatched = libcublas.cublasZgetrsBatched
+for funct in [cublasSgetrsBatched, cublasDgetrsBatched, cublasCgetrsBatched, cublasZgetrsBatched]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t,
+                      c_cublasOperation_t    #trans
+                      c_int,                 #n
+                      c_int,                 #nrhs
+                      array_pointer,         #*Aarray[]
+                      c_int,                 #lda
+                      scalar_pointer,        #*devIpiv
+                      array_pointer,         #*Barray[]
+                      c_int,                 #ldb
+                      scalar_pointer,        #*info
+                      c_int                  #batchSize
+                      ]
+
+#cublasStatus_t cublasSgetriBatched(cublasHandle_t handle,
+#                                   int n,
+#                                   float *Aarray[],
+#                                   int lda,
+#                                   int *PivotArray,
+#                                   float *Carray[],
+#                                   int ldc,
+#                                   int *infoArray,
+#                                   int batchSize);
+#cublasStatus_t cublasDgetriBatched(cublasHandle_t handle,
+#                                   int n,
+#                                   double *Aarray[],
+#                                   int lda,
+#                                   int *PivotArray,
+#                                   double *Carray[],
+#                                   int ldc,
+#                                   int *infoArray,
+#                                   int batchSize);
+#cublasStatus_t cublasCgetriBatched(cublasHandle_t handle,
+#                                   int n,
+#                                   cuComplex *Aarray[],
+#                                   int lda,
+#                                   int *PivotArray,
+#                                   cuComplex *Carray[],
+#                                   int ldc,
+#                                   int *infoArray,
+#                                   int batchSize);
+#cublasStatus_t cublasZgetriBatched(cublasHandle_t handle,
+#                                   int n,
+#                                   cuDoubleComplex *Aarray[],
+#                                   int lda,
+#                                   int *PivotArray,
+#                                   cuDoubleComplex *Carray[],
+#                                   int ldc,
+#                                   int *infoArray,
+#                                   int batchSize);
+
+
+
+
+
+cublasSgetrsBatched = libcublas.cublasSgetrsBatched
+cublasDgetrsBatched = libcublas.cublasDgetrsBatched
+cublasCgetrsBatched = libcublas.cublasCgetrsBatched
+cublasZgetrsBatched = libcublas.cublasZgetrsBatched
+for funct in [cublasSgetrsBatched, cublasDgetrsBatched, cublasCgetrsBatched, cublasZgetrsBatched]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t,
+                      c_cublasOperation_t    #trans
+                      c_int,                 #n
+                      c_int,                 #nrhs
+                      array_pointer,         #*Aarray[]
+                      c_int,                 #lda
+                      scalar_pointer,        #*devIpiv
+                      array_pointer,         #*Barray[]
+                      c_int,                 #ldb
+                      scalar_pointer,        #*info
+                      c_int                  #batchSize
+                      ]
 
