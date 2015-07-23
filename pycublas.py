@@ -1714,18 +1714,7 @@ for funct in [cublasCherkx, cublasZherkx]:
                       memory_pointer, c_int  #*C, ldc
                       ]
 
-# Function to help construct the headers
-#def header(funct):
-#    fS = 'cublasS' + funct
-#    fD = 'cublasD' + funct
-#    fC = 'cublasC' + funct
-#    fZ = 'cublasZ' + funct
-#    for f in [fS, fD, fC, fZ]:
-#       print '%s = libcublas.%s_v2' % (f, f)
-#    print 'for funct in [%s, %s, %s, %s]:' % (fS, fD, fC, fZ)
-#    print '    funct.restype = cublasStatus_t'
-#    print '    #funct.argtypes = [cublasHandle_t,'
-
+## cuBLAS BLAS-like Extension Functions ##
 
 #cublasStatus_t cublasSgeam(cublasHandle_t handle,
 #                           cublasOperation_t transa, cublasOperation_t transb,
@@ -1775,7 +1764,6 @@ for funct in [cublasSgeam, cublasDgeam, cublasCgeam, cublasZgeam]:
                       memory_pointer, c_int, #*B, ldb
                       memory_pointer, c_int  #*C, ldc
                       ]
-
 
 #cublasStatus_t cublasSdgmm(cublasHandle_t handle, cublasSideMode_t mode,
 #                           int m, int n,
@@ -1899,6 +1887,8 @@ for funct in [cublasSgetrfBatched, cublasDgetrfBatched, cublasCgetrfBatched, cub
 #                                   int ldb,
 #                                   int *info,
 #                                   int batchSize);
+#TODO This is not working with cublas6.5
+'''
 cublasSgetrsBatched = libcublas.cublasSgetrsBatched
 cublasDgetrsBatched = libcublas.cublasDgetrsBatched
 cublasCgetrsBatched = libcublas.cublasCgetrsBatched
@@ -1906,7 +1896,7 @@ cublasZgetrsBatched = libcublas.cublasZgetrsBatched
 for funct in [cublasSgetrsBatched, cublasDgetrsBatched, cublasCgetrsBatched, cublasZgetrsBatched]:
     funct.restype = cublasStatus_t
     funct.argtypes = [cublasHandle_t,
-                      c_cublasOperation_t    #trans
+                      c_cublasOperation_t,   #trans
                       c_int,                 #n
                       c_int,                 #nrhs
                       array_pointer,         #*Aarray[]
@@ -1916,7 +1906,7 @@ for funct in [cublasSgetrsBatched, cublasDgetrsBatched, cublasCgetrsBatched, cub
                       c_int,                 #ldb
                       scalar_pointer,        #*info
                       c_int                  #batchSize
-                      ]
+                      ]'''
 
 #cublasStatus_t cublasSgetriBatched(cublasHandle_t handle,
 #                                   int n,
@@ -1956,25 +1946,14 @@ for funct in [cublasSgetrsBatched, cublasDgetrsBatched, cublasCgetrsBatched, cub
 #                                   int batchSize);
 
 
-
-
-
-cublasSgetrsBatched = libcublas.cublasSgetrsBatched
-cublasDgetrsBatched = libcublas.cublasDgetrsBatched
-cublasCgetrsBatched = libcublas.cublasCgetrsBatched
-cublasZgetrsBatched = libcublas.cublasZgetrsBatched
-for funct in [cublasSgetrsBatched, cublasDgetrsBatched, cublasCgetrsBatched, cublasZgetrsBatched]:
-    funct.restype = cublasStatus_t
-    funct.argtypes = [cublasHandle_t,
-                      c_cublasOperation_t    #trans
-                      c_int,                 #n
-                      c_int,                 #nrhs
-                      array_pointer,         #*Aarray[]
-                      c_int,                 #lda
-                      scalar_pointer,        #*devIpiv
-                      array_pointer,         #*Barray[]
-                      c_int,                 #ldb
-                      scalar_pointer,        #*info
-                      c_int                  #batchSize
-                      ]
-
+# Function to help construct the headers
+#def header(funct):
+#    fS = 'cublasS' + funct
+#    fD = 'cublasD' + funct
+#    fC = 'cublasC' + funct
+#    fZ = 'cublasZ' + funct
+#    for f in [fS, fD, fC, fZ]:
+#       print '%s = libcublas.%s_v2' % (f, f)
+#    print 'for funct in [%s, %s, %s, %s]:' % (fS, fD, fC, fZ)
+#    print '    funct.restype = cublasStatus_t'
+#    print '    #funct.argtypes = [cublasHandle_t,'
