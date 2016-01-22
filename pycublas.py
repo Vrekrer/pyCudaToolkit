@@ -3,7 +3,7 @@
 """
 Raw ctypes wrappers of the cuBLAS library (v7.0)
 For documentation see:
-http://docs.nvidia.com/cuda/cublas/index.htm
+http://docs.nvidia.com/cuda/cublas
 cublas_api.h and cublas_v2.h
 """
 
