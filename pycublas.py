@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Raw ctypes wrappers of the cuBLAS library (v7.0)
+Raw ctypes wrappers of the cuBLAS library (v7.0+)
 For documentation see:
 http://docs.nvidia.com/cuda/cublas
-cublas_api.h and cublas_v2.h
+(/usr/include/) cublas_api.h and cublas_v2.h
 """
 
 import platform
@@ -15,10 +15,7 @@ from ctypes import *
 
 ### cuBLAS Library ###
 libname = ctypes.util.find_library('cublas')
-#para windows en 64bit
-#libname = ctypes.util.find_library('cublas64_70')
-#dependiendo de la version de CUDA el nombre de la libreria
-#cambiara por ejemplo cublas32_60
+#TODO import name for windows/mac?
 if platform.system()=='Windows': 
     libcublas = ctypes.windll.LoadLibrary(libname)
 elif platform.system()=='Linux':     
@@ -747,9 +744,9 @@ for funct in [cublasSspr2, cublasDspr2]:
 #                            const cuDoubleComplex *x, int incx, const cuDoubleComplex *beta,
 #                            cuDoubleComplex *y, int incy)
 cublasSsymv = libcublas.cublasSsymv_v2
-cublasDsymv = libcublas.cublasSsymv_v2
-cublasCsymv = libcublas.cublasSsymv_v2
-cublasZsymv = libcublas.cublasSsymv_v2
+cublasDsymv = libcublas.cublasDsymv_v2
+cublasCsymv = libcublas.cublasCsymv_v2
+cublasZsymv = libcublas.cublasZsymv_v2
 for funct in [cublasSsymv, cublasDsymv, cublasCsymv, cublasZsymv]:
     funct.restype = cublasStatus_t
     funct.argtypes = [cublasHandle_t,
@@ -898,6 +895,37 @@ cublasDtpmv = libcublas.cublasDtpmv_v2
 cublasCtpmv = libcublas.cublasCtpmv_v2
 cublasZtpmv = libcublas.cublasZtpmv_v2
 for funct in [cublasStpmv, cublasDtpmv, cublasCtpmv, cublasZtpmv]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t,
+                      c_cublasFillMode_t,    #uplo
+                      c_cublasOperation_t,   #trans
+                      c_cublasDiagType_t,    #diag
+                      c_int,                 #n
+                      memory_pointer,        #*AP
+                      memory_pointer, c_int  #*x, incx
+                      ]
+
+# cublasStatus_t cublasStpsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const float           *AP,
+#                            #float           *x, int incx)
+# cublasStatus_t cublasDtpsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const double          *AP,
+#                            double          *x, int incx)
+# cublasStatus_t cublasCtpsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const cuComplex       *AP,
+#                            cuComplex       *x, int incx)
+# cublasStatus_t cublasZtpsv(cublasHandle_t handle, cublasFillMode_t uplo,
+#                            cublasOperation_t trans, cublasDiagType_t diag,
+#                            int n, const cuDoubleComplex *AP,
+#                            cuDoubleComplex *x, int incx)
+cublasStpsv = libcublas.cublasStpsv_v2
+cublasDtpsv = libcublas.cublasDtpsv_v2
+cublasCtpsv = libcublas.cublasCtpsv_v2
+cublasZtpsv = libcublas.cublasZtpsv_v2
+for funct in [cublasStpsv, cublasDtpsv, cublasCtpsv, cublasZtpsv]:
     funct.restype = cublasStatus_t
     funct.argtypes = [cublasHandle_t,
                       c_cublasFillMode_t,    #uplo
@@ -1887,8 +1915,6 @@ for funct in [cublasSgetrfBatched, cublasDgetrfBatched, cublasCgetrfBatched, cub
 #                                   int ldb,
 #                                   int *info,
 #                                   int batchSize);
-#TODO This is not working with cublas6.5
-'''
 cublasSgetrsBatched = libcublas.cublasSgetrsBatched
 cublasDgetrsBatched = libcublas.cublasDgetrsBatched
 cublasCgetrsBatched = libcublas.cublasCgetrsBatched
@@ -1906,7 +1932,7 @@ for funct in [cublasSgetrsBatched, cublasDgetrsBatched, cublasCgetrsBatched, cub
                       c_int,                 #ldb
                       scalar_pointer,        #*info
                       c_int                  #batchSize
-                      ]'''
+                      ]
 
 #cublasStatus_t cublasSgetriBatched(cublasHandle_t handle,
 #                                   int n,
@@ -1944,16 +1970,82 @@ for funct in [cublasSgetrsBatched, cublasDgetrsBatched, cublasCgetrsBatched, cub
 #                                   int ldc,
 #                                   int *infoArray,
 #                                   int batchSize);
+cublasSgetriBatched = libcublas.cublasSgetriBatched
+cublasDgetriBatched = libcublas.cublasDgetriBatched
+cublasCgetriBatched = libcublas.cublasCgetriBatched
+cublasZgetriBatched = libcublas.cublasZgetriBatched
+for funct in [cublasSgetriBatched, cublasDgetriBatched, cublasCgetriBatched, cublasZgetriBatched]:
+    funct.restype = cublasStatus_t
+    funct.argtypes = [cublasHandle_t,
+                      c_int,                 #n
+                      array_pointer,         #*Aarray[]
+                      c_int,                 #lda
+                      scalar_pointer,         #*PivotArray,
+                      array_pointer,         #*Carray[]
+                      c_int,                 #ldc
+                      scalar_pointer,        #*infoArray
+                      c_int                  #batchSize
+                      ]
 
 
-# Function to help construct the headers
-#def header(funct):
-#    fS = 'cublasS' + funct
-#    fD = 'cublasD' + funct
-#    fC = 'cublasC' + funct
-#    fZ = 'cublasZ' + funct
-#    for f in [fS, fD, fC, fZ]:
-#       print '%s = libcublas.%s_v2' % (f, f)
-#    print 'for funct in [%s, %s, %s, %s]:' % (fS, fD, fC, fZ)
-#    print '    funct.restype = cublasStatus_t'
-#    print '    #funct.argtypes = [cublasHandle_t,'
+
+
+#Published symbols libcublas.so.7.0 not implemented yet:
+
+# cublasXerbla          ** Not documented??
+# cublasSetBackdoor     ** Not documented??
+
+# cublasGetStream_v2
+# cublasSetStream_v2
+# cublasGetVectorAsync
+# cublasSetVectorAsync
+# cublasGetMatrixAsync
+# cublasSetMatrixAsync
+
+# cublasAlloc       ** Deprecated, use cudaMalloc
+# cublasFree        ** Deprecated, use cudaFree
+# cublasInit        ** Deprecated, use cublasCreate
+# cublasShutdown    ** Deprecated, use cublasDestroy
+# cublasGetError    ** Deprecated, use functions return value
+# cublasSetKernelStream  ** Deprecated, use cublasSetStream_v2
+
+
+# cublasCgetri ** Not documented??
+# cublasDgetri ** Not documented??
+# cublasSgetri ** Not documented??
+# cublasZgetri ** Not documented??
+
+# cublasCbdmm  ** Not documented??
+# cublasDbdmm  ** Not documented??
+# cublasSbdmm  ** Not documented??
+# cublasZbdmm  ** Not documented??
+
+
+# cublasCmatinvBatched
+# cublasDmatinvBatched
+# cublasSmatinvBatched
+# cublasZmatinvBatched
+
+# cublasCgeqrfBatched
+# cublasDgeqrfBatched
+# cublasSgeqrfBatched
+# cublasZgeqrfBatched
+
+# cublasCgelsBatched
+# cublasDgelsBatched
+# cublasSgelsBatched
+# cublasZgelsBatched
+
+# cublasCtrttp
+# cublasDtrttp
+# cublasStrttp
+# cublasZtrttp
+
+# cublasCtpttr
+# cublasDtpttr
+# cublasStpttr
+# cublasZtpttr
+
+
+
+
