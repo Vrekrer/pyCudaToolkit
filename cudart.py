@@ -1300,8 +1300,6 @@ cudaRuntimeGetVersion.argtypes = [POINTER(c_int)]
 ###
 ### Published symbols in libcudart.so.7.0 not implemented yet:
 
-# 1
-
 # __cudaInitManagedRuntime
 # __cudaInitModule
 # __cudaRegisterDeviceFunct
@@ -1315,13 +1313,11 @@ cudaRuntimeGetVersion.argtypes = [POINTER(c_int)]
 # __cudaRegisterTexture
 # __cudaRegisterVar
 # __cudaUnregisterFatBinary
-# cudaArrayGetInfo
 # cudaBindSurfaceToArray
 # cudaBindTexture
 # cudaBindTexture2D
 # cudaBindTextureToArray
 # cudaBindTextureToMipmappe
-# cudaConfigureCall
 # cudaCreateChannelDesc
 # cudaCreateSurfaceObject
 # cudaCreateTextureObject
@@ -1330,20 +1326,6 @@ cudaRuntimeGetVersion.argtypes = [POINTER(c_int)]
 # cudaDeviceCanAccessPeer
 # cudaDeviceDisablePeerAcce
 # cudaDeviceEnablePeerAcces
-# cudaDeviceGetAttribute
-# cudaDeviceGetByPCIBusId
-# cudaDeviceGetCacheConfig
-# cudaDeviceGetLimit
-# cudaDeviceGetPCIBusId
-# cudaDeviceGetSharedMemCon
-# cudaDeviceGetStreamPriori
-# cudaDeviceReset
-# cudaDeviceSetCacheConfig
-# cudaDeviceSetLimit
-# cudaDeviceSetSharedMemCon
-# cudaDeviceSynchronize
-
-
 # cudaEventCreate
 # cudaEventCreateWithFlags
 # cudaEventDestroy
@@ -1352,10 +1334,6 @@ cudaRuntimeGetVersion.argtypes = [POINTER(c_int)]
 # cudaEventRecord
 # cudaEventRecord_ptsz
 # cudaEventSynchronize
-# cudaFree
-# cudaFreeArray
-# cudaFreeHost
-# cudaFreeMipmappedArray
 # cudaFuncGetAttributes
 # cudaFuncSetCacheConfig
 # cudaFuncSetSharedMemConfi
@@ -1369,18 +1347,9 @@ cudaRuntimeGetVersion.argtypes = [POINTER(c_int)]
 # cudaGLUnmapBufferObjectAs
 # cudaGLUnregisterBufferObj
 # cudaGetChannelDesc
-# cudaGetDevice
-# cudaGetDeviceCount
-# cudaGetDeviceFlags
-# cudaGetErrorName
-# cudaGetErrorString
 # cudaGetExportTable
-# cudaGetLastError
-# cudaGetMipmappedArrayLeve
 # cudaGetSurfaceObjectResou
 # cudaGetSurfaceReference
-# cudaGetSymbolAddress
-# cudaGetSymbolSize
 # cudaGetTextureAlignmentOf
 # cudaGetTextureObjectResou
 # cudaGetTextureObjectResou
@@ -1397,101 +1366,43 @@ cudaRuntimeGetVersion.argtypes = [POINTER(c_int)]
 # cudaGraphicsUnregisterRes
 # cudaGraphicsVDPAURegister
 # cudaGraphicsVDPAURegister
-# cudaHostAlloc
-# cudaHostGetDevicePointer
-# cudaHostGetFlags
-# cudaHostRegister
-# cudaHostUnregister
-# cudaIpcCloseMemHandle
-# cudaIpcGetEventHandle
-# cudaIpcGetMemHandle
-# cudaIpcOpenEventHandle
-# cudaIpcOpenMemHandle
-# cudaLaunch
 # cudaLaunchKernel
 # cudaLaunchKernel_ptsz
 # cudaLaunch_ptsz
-# cudaMalloc
-# cudaMalloc3D
-# cudaMalloc3DArray
-# cudaMallocArray
-# cudaMallocHost
-# cudaMallocManaged
-# cudaMallocMipmappedArray
-# cudaMallocPitch
-# cudaMemGetInfo
-# cudaMemcpy
-# cudaMemcpy2D
-# cudaMemcpy2DArrayToArray
 # cudaMemcpy2DArrayToArray_
-# cudaMemcpy2DAsync
 # cudaMemcpy2DAsync_ptsz
-# cudaMemcpy2DFromArray
-# cudaMemcpy2DFromArrayAsyn
-# cudaMemcpy2DFromArrayAsyn
 # cudaMemcpy2DFromArray_ptd
-# cudaMemcpy2DToArray
-# cudaMemcpy2DToArrayAsync
 # cudaMemcpy2DToArrayAsync_
 # cudaMemcpy2DToArray_ptds
 # cudaMemcpy2D_ptds
-# cudaMemcpy3D
-# cudaMemcpy3DAsync
 # cudaMemcpy3DAsync_ptsz
-# cudaMemcpy3DPeer
-# cudaMemcpy3DPeerAsync
 # cudaMemcpy3DPeerAsync_pts
 # cudaMemcpy3DPeer_ptds
 # cudaMemcpy3D_ptds
-# cudaMemcpyArrayToArray
 # cudaMemcpyArrayToArray_pt
-# cudaMemcpyAsync
 # cudaMemcpyAsync_ptsz
-# cudaMemcpyFromArray
-# cudaMemcpyFromArrayAsync
 # cudaMemcpyFromArrayAsync_
 # cudaMemcpyFromArray_ptds
-# cudaMemcpyFromSymbol
-# cudaMemcpyFromSymbolAsync
-# cudaMemcpyFromSymbolAsync
 # cudaMemcpyFromSymbol_ptds
-# cudaMemcpyPeer
-# cudaMemcpyPeerAsync
-# cudaMemcpyToArray
-# cudaMemcpyToArrayAsync
 # cudaMemcpyToArrayAsync_pt
 # cudaMemcpyToArray_ptds
-# cudaMemcpyToSymbol
-# cudaMemcpyToSymbolAsync
 # cudaMemcpyToSymbolAsync_p
 # cudaMemcpyToSymbol_ptds
 # cudaMemcpy_ptds
-# cudaMemset
-# cudaMemset2D
-# cudaMemset2DAsync
 # cudaMemset2DAsync_ptsz
 # cudaMemset2D_ptds
-# cudaMemset3D
-# cudaMemset3DAsync
 # cudaMemset3DAsync_ptsz
 # cudaMemset3D_ptds
-# cudaMemsetAsync
 # cudaMemsetAsync_ptsz
 # cudaMemset_ptds
 # cudaOccupancyMaxActiveBlo
 # cudaOccupancyMaxActiveBlo
-# cudaPeekAtLastError
 # cudaPointerGetAttributes
 # cudaProfilerInitialize
 # cudaProfilerStart
 # cudaProfilerStop
-
-# cudaSetDevice
-# cudaSetDeviceFlags
 # cudaSetDoubleForDevice
 # cudaSetDoubleForHost
-# cudaSetValidDevices
-# cudaSetupArgument
 # cudaStreamAddCallback
 # cudaStreamAddCallback_pts
 # cudaStreamAttachMemAsync
@@ -1510,6 +1421,15 @@ cudaRuntimeGetVersion.argtypes = [POINTER(c_int)]
 # cudaStreamSynchronize_pts
 # cudaStreamWaitEvent
 # cudaStreamWaitEvent_ptsz
+# cudaUnbindTexture
+# cudaVDPAUGetDevice
+# cudaVDPAUSetVDPAUDevice
+
+
+# DEPRECATED Execution Control module
+# cudaConfigureCall
+# cudaLaunch
+# cudaSetupArgument
 
 # DEPRECATED Thread Management module
 # cudaThreadExit            ** Deprecated, use cudaDeviceReset
@@ -1519,7 +1439,4 @@ cudaRuntimeGetVersion.argtypes = [POINTER(c_int)]
 # cudaThreadSetLimit        ** Deprecated, use cudaDeviceSetLimit
 # cudaThreadSynchronize     ** Deprecated, use cudaDeviceSynchronize
 
-# cudaUnbindTexture
-# cudaVDPAUGetDevice
-# cudaVDPAUSetVDPAUDevice
 
