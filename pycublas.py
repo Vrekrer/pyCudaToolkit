@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """
-Raw ctypes wrappers of the cuBLAS library (v7.0+)
+Raw ctypes wrappers of the cuBLAS library v7.0+ (libcublas.so.7.0)
+
 For documentation see:
 http://docs.nvidia.com/cuda/cublas
-(/usr/include/) cublas_api.h and cublas_v2.h
+/usr/include/ cublas_api.h and cublas_v2.h
 """
 
 import platform
@@ -1863,12 +1864,12 @@ cublasZgetrfBatched = libcublas.cublasZgetrfBatched
 for funct in [cublasSgetrfBatched, cublasDgetrfBatched, cublasCgetrfBatched, cublasZgetrfBatched]:
     funct.restype = cublasStatus_t
     funct.argtypes = [cublasHandle_t,
-                      c_int,                 #n
-                      array_pointer,         #*Aarray[]
-                      c_int,                 #lda
-                      scalar_pointer,        #*PivotArray
-                      scalar_pointer,        #*infoArray
-                      c_int                  #batchSize
+                      c_int,            #n
+                      array_pointer,    #*Aarray[]
+                      c_int,            #lda
+                      scalar_pointer,   #*PivotArray
+                      scalar_pointer,   #*infoArray
+                      c_int             #batchSize
                       ]
 
 #cublasStatus_t cublasSgetrsBatched(cublasHandle_t handle,
@@ -1977,20 +1978,20 @@ cublasZgetriBatched = libcublas.cublasZgetriBatched
 for funct in [cublasSgetriBatched, cublasDgetriBatched, cublasCgetriBatched, cublasZgetriBatched]:
     funct.restype = cublasStatus_t
     funct.argtypes = [cublasHandle_t,
-                      c_int,                 #n
-                      array_pointer,         #*Aarray[]
-                      c_int,                 #lda
-                      scalar_pointer,         #*PivotArray,
-                      array_pointer,         #*Carray[]
-                      c_int,                 #ldc
-                      scalar_pointer,        #*infoArray
-                      c_int                  #batchSize
+                      c_int,            #n
+                      array_pointer,    #*Aarray[]
+                      c_int,            #lda
+                      scalar_pointer,   #*PivotArray,
+                      array_pointer,    #*Carray[]
+                      c_int,            #ldc
+                      scalar_pointer,   #*infoArray
+                      c_int             #batchSize
                       ]
 
 
 
 
-#Published symbols libcublas.so.7.0 not implemented yet:
+#Published symbols in libcublas.so.7.0 not implemented yet:
 
 # cublasXerbla          ** Not documented??
 # cublasSetBackdoor     ** Not documented??
@@ -2002,12 +2003,12 @@ for funct in [cublasSgetriBatched, cublasDgetriBatched, cublasCgetriBatched, cub
 # cublasGetMatrixAsync
 # cublasSetMatrixAsync
 
-# cublasAlloc       ** Deprecated, use cudaMalloc
-# cublasFree        ** Deprecated, use cudaFree
-# cublasInit        ** Deprecated, use cublasCreate
-# cublasShutdown    ** Deprecated, use cublasDestroy
-# cublasGetError    ** Deprecated, use functions return value
-# cublasSetKernelStream  ** Deprecated, use cublasSetStream_v2
+# cublasAlloc           ** Deprecated, use cudaMalloc
+# cublasFree            ** Deprecated, use cudaFree
+# cublasInit            ** Deprecated, use cublasCreate
+# cublasShutdown        ** Deprecated, use cublasDestroy
+# cublasGetError        ** Deprecated, use functions return value
+# cublasSetKernelStream ** Deprecated, use cublasSetStream_v2
 
 
 # cublasCgetri ** Not documented??
