@@ -15,19 +15,21 @@ from ctypes import *
 
 ### cudart Library ###
 libname = ctypes.util.find_library('cudart')
-#TODO import name for windows/mac?
+# TODO import name for windows/mac?
 if platform.system()=='Windows': 
     libcudart = ctypes.windll.LoadLibrary(libname)
 elif platform.system()=='Linux':     
     libcudart = ctypes.CDLL(libname, ctypes.RTLD_GLOBAL)
 else:
     libcudart = ctypes.cdll.LoadLibrary(libname)
-
+###
 ### Datatypes ###
+###
 
-##Enumerates##
+##
+## Enumerates ##
 
-#cudaError_t
+# cudaError_t
 class cudaError_t(enum.IntEnum):
     cudaSuccess = 0
     cudaErrorMissingConfiguration       = 1
@@ -111,7 +113,7 @@ class cudaError_t(enum.IntEnum):
     cudaErrorApiFailureBase             = 10000
 c_cudaError_t = c_int
 
-#cudaDeviceAttr
+# cudaDeviceAttr
 class cudaDeviceAttr(enum.IntEnum):
     cudaDevAttrMaxThreadsPerBlock             = 1
     cudaDevAttrMaxBlockDimX                   = 2
@@ -199,7 +201,7 @@ class cudaDeviceAttr(enum.IntEnum):
     cudaDevAttrMultiGpuBoardGroupID           = 85
 c_cudaDeviceAttr = c_int
 
-#cudaFuncCache
+# cudaFuncCache
 class cudaFuncCache(enum.IntEnum):
     cudaFuncCachePreferNone   = 0
     cudaFuncCachePreferShared = 1
@@ -207,7 +209,7 @@ class cudaFuncCache(enum.IntEnum):
     cudaFuncCachePreferEqual  = 3
 c_cudaFuncCache = c_int
 
-#cudaLimit
+# cudaLimit
 class cudaLimit(enum.IntEnum):
     cudaLimitStackSize                    = 0x00
     cudaLimitPrintfFifoSize               = 0x01
@@ -216,102 +218,191 @@ class cudaLimit(enum.IntEnum):
     cudaLimitDevRuntimePendingLaunchCount = 0x04
 c_cudaLimit = c_int
 
-#cudaSharedMemConfig
+# cudaSharedMemConfig
 class cudaSharedMemConfig(enum.IntEnum):
     cudaSharedMemBankSizeDefault   = 0
     cudaSharedMemBankSizeFourByte  = 1
     cudaSharedMemBankSizeEightByte = 2
 c_cudaSharedMemConfig = c_int
 
-##Structures##
+# cudaChannelFormatKind
+class cudaChannelFormatKind(enum.IntEnum):
+    cudaChannelFormatKindSigned    = 0
+    cudaChannelFormatKindUnsigned  = 1
+    cudaChannelFormatKindFloat     = 2
+    cudaChannelFormatKindNone      = 3
+c_cudaChannelFormatKind = c_int
 
-CUDA_IPC_HANDLE_SIZE  = 64
-    
-#struct cudaDeviceProp
-#defined in driver_types.h (V7.0) line 1257
-class cudaDeviceProp(Structure):
-    _fields_ = [('name',                       c_char*256),
-                ('totalGlobalMem',             c_size_t),
-                ('sharedMemPerBlock',          c_size_t),
-                ('regsPerBlock',               c_int),
-                ('warpSize',                   c_int),
-                ('memPitch',                   c_size_t),
-                ('maxThreadsPerBlock',         c_int),
-                ('maxThreadsDim',              c_int*3),
-                ('maxGridSize',                c_int*3),
-                ('clockRate',                  c_int),
-                ('totalConstMem',              c_size_t),
-                ('major',                      c_int),
-                ('minor',                      c_int),
-                ('textureAlignment',           c_size_t),
-                ('texturePitchAlignment',      c_size_t),
-                ('deviceOverlap',              c_int),
-                ('multiProcessorCount',        c_int),
-                ('kernelExecTimeoutEnabled',   c_int),
-                ('integrated',                 c_int),
-                ('canMapHostMemory',           c_int),
-                ('computeMode',                c_int),
-                ('maxTexture1D',               c_int),
-                ('maxTexture1DMipmap',         c_int),
-                ('maxTexture1DLinear',         c_int),
-                ('maxTexture2D',               c_int*2),
-                ('maxTexture2DMipmap',         c_int*2),
-                ('maxTexture2DLinear',         c_int*3),
-                ('maxTexture2DGather',         c_int*2),
-                ('maxTexture3D',               c_int*3),
-                ('maxTexture3DAlt',            c_int*3),
-                ('maxTextureCubemap',          c_int),
-                ('maxTexture1DLayered',        c_int*2),
-                ('maxTexture2DLayered',        c_int*3),
-                ('maxTextureCubemapLayered',   c_int*2),
-                ('maxSurface1D',               c_int),
-                ('maxSurface2D',               c_int*2),
-                ('maxSurface3D',               c_int*3),
-                ('maxSurface1DLayered',        c_int*2),
-                ('maxSurface2DLayered',        c_int*3),
-                ('maxSurfaceCubemap',          c_int),
-                ('maxSurfaceCubemapLayered',   c_int*2),
-                ('surfaceAlignment',           c_size_t),
-                ('concurrentKernels',          c_int),
-                ('ECCEnabled',                 c_int),
-                ('pciBusID',                   c_int),
-                ('pciDeviceID',                c_int),
-                ('pciDomainID',                c_int),
-                ('tccDriver',                  c_int),
-                ('asyncEngineCount',           c_int),
-                ('unifiedAddressing',          c_int),
-                ('memoryClockRate',            c_int),
-                ('memoryBusWidth',             c_int),
-                ('l2CacheSize',                c_int),
-                ('maxThreadsPerMultiProcessor',c_int),
-                ('streamPrioritiesSupported',  c_int),
-                ('globalL1CacheSupported',     c_int),
-                ('localL1CacheSupported',      c_int),
-                ('sharedMemPerMultiprocessor', c_size_t),
-                ('regsPerMultiprocessor',      c_int),
-                ('managedMemory',              c_int),
-                ('isMultiGpuBoard',            c_int),
-                ('multiGpuBoardGroupID',       c_int)]
+# cudaMemcpyKind
+class cudaMemcpyKind(enum.IntEnum):
+    cudaMemcpyHostToHost     = 0
+    cudaMemcpyHostToDevice   = 1
+    cudaMemcpyDeviceToHost   = 2
+    cudaMemcpyDeviceToDevice = 3
+    cudaMemcpyDefault        = 4
+c_cudaMemcpyKind = c_int
 
-#cudaIpcEventHandle_t
-#defined in driver_types.h (V7.0) line 1397
-class cudaIpcEventHandle_t(Structure):
-    _fields_ = [('reserved',  c_char*CUDA_IPC_HANDLE_SIZE)]
-
-#cudaIpcMemHandle_t
-#defined in driver_types.h (V7.0) line 1405
-class cudaIpcMemHandle_t(Structure):
-    _fields_ = [('reserved',  c_char*CUDA_IPC_HANDLE_SIZE)]
-
-##Opaque types##
+##
+## Opaque types ##
 class _opaque(ctypes.Structure): pass
 
 cudaEvent_t = POINTER(_opaque)
 cudaEvent_t.__name__ = 'cudaEvent_t'
 
-### Modules ###
+cudaArray_t = POINTER(_opaque)
+cudaArray_t.__name__ = 'cudaArray_t'
 
-##1. Device Management##
+cudaArray_const_t = POINTER(_opaque)
+cudaArray_const_t.__name__ = 'cudaArray_const_t'
+
+cudaMipmappedArray_t = POINTER(_opaque)
+cudaMipmappedArray_t.__name__ = 'cudaMipmappedArray_t'
+
+cudaMipmappedArray_const_t = POINTER(_opaque)
+cudaMipmappedArray_const_t.__name__ = 'cudaMipmappedArray_const_t'
+
+cudaStream_t = POINTER(_opaque)
+cudaStream_t.__name__ = 'cudaStream_t'
+
+##
+## Structures ##
+
+CUDA_IPC_HANDLE_SIZE  = 64
+    
+# struct cudaDeviceProp
+class cudaDeviceProp(Structure):
+    _fields_ = [('name',                        c_char*256),
+                ('totalGlobalMem',              c_size_t),
+                ('sharedMemPerBlock',           c_size_t),
+                ('regsPerBlock',                c_int),
+                ('warpSize',                    c_int),
+                ('memPitch',                    c_size_t),
+                ('maxThreadsPerBlock',          c_int),
+                ('maxThreadsDim',               c_int*3),
+                ('maxGridSize',                 c_int*3),
+                ('clockRate',                   c_int),
+                ('totalConstMem',               c_size_t),
+                ('major',                       c_int),
+                ('minor',                       c_int),
+                ('textureAlignment',            c_size_t),
+                ('texturePitchAlignment',       c_size_t),
+                ('deviceOverlap',               c_int),
+                ('multiProcessorCount',         c_int),
+                ('kernelExecTimeoutEnabled',    c_int),
+                ('integrated',                  c_int),
+                ('canMapHostMemory',            c_int),
+                ('computeMode',                 c_int),
+                ('maxTexture1D',                c_int),
+                ('maxTexture1DMipmap',          c_int),
+                ('maxTexture1DLinear',          c_int),
+                ('maxTexture2D',                c_int*2),
+                ('maxTexture2DMipmap',          c_int*2),
+                ('maxTexture2DLinear',          c_int*3),
+                ('maxTexture2DGather',          c_int*2),
+                ('maxTexture3D',                c_int*3),
+                ('maxTexture3DAlt',             c_int*3),
+                ('maxTextureCubemap',           c_int),
+                ('maxTexture1DLayered',         c_int*2),
+                ('maxTexture2DLayered',         c_int*3),
+                ('maxTextureCubemapLayered',    c_int*2),
+                ('maxSurface1D',                c_int),
+                ('maxSurface2D',                c_int*2),
+                ('maxSurface3D',                c_int*3),
+                ('maxSurface1DLayered',         c_int*2),
+                ('maxSurface2DLayered',         c_int*3),
+                ('maxSurfaceCubemap',           c_int),
+                ('maxSurfaceCubemapLayered',    c_int*2),
+                ('surfaceAlignment',            c_size_t),
+                ('concurrentKernels',           c_int),
+                ('ECCEnabled',                  c_int),
+                ('pciBusID',                    c_int),
+                ('pciDeviceID',                 c_int),
+                ('pciDomainID',                 c_int),
+                ('tccDriver',                   c_int),
+                ('asyncEngineCount',            c_int),
+                ('unifiedAddressing',           c_int),
+                ('memoryClockRate',             c_int),
+                ('memoryBusWidth',              c_int),
+                ('l2CacheSize',                 c_int),
+                ('maxThreadsPerMultiProcessor', c_int),
+                ('streamPrioritiesSupported',   c_int),
+                ('globalL1CacheSupported',      c_int),
+                ('localL1CacheSupported',       c_int),
+                ('sharedMemPerMultiprocessor',  c_size_t),
+                ('regsPerMultiprocessor',       c_int),
+                ('managedMemory',               c_int),
+                ('isMultiGpuBoard',             c_int),
+                ('multiGpuBoardGroupID',        c_int)]
+
+# struct cudaIpcEventHandle_t
+class cudaIpcEventHandle_t(Structure):
+    _fields_ = [('reserved', c_char*CUDA_IPC_HANDLE_SIZE)]
+
+# struct cudaIpcMemHandle_t
+class cudaIpcMemHandle_t(Structure):
+    _fields_ = [('reserved', c_char*CUDA_IPC_HANDLE_SIZE)]
+
+# struct cudaChannelFormatDesc
+class cudaChannelFormatDesc(Structure):
+    _fields_ = [('x', c_int),
+                ('y', c_int),
+                ('z', c_int),
+                ('w', c_int),
+                ('f', c_cudaChannelFormatKind)]
+
+# struct cudaExtent
+class cudaExtent(Structure):
+    _fields_ = [('width',  c_size_t),
+                ('height', c_size_t),
+                ('depth',  c_size_t)]
+
+# struct cudaPitchedPtr
+class cudaPitchedPtr(Structure):
+    _fields_ = [('ptr',   c_void_p),
+                ('pitch', c_size_t),
+                ('xsize', c_size_t),
+                ('ysize', c_size_t)]
+
+# struct cudaPos
+class cudaPos(Structure):
+    _fields_ = [('x', c_size_t),
+                ('y', c_size_t),
+                ('z', c_size_t)]
+
+# struct cudaMemcpy3DParms
+class cudaMemcpy3DParms(Structure):
+    _fields_ = [('srcArray', cudaArray_t),
+                ('srcPos',   cudaPos),
+                ('srcPtr',   cudaPitchedPtr),
+                
+                ('dstArray', cudaArray_t),
+                ('dstPos',   cudaPos),
+                ('dstPtr',   cudaPitchedPtr),
+                
+                ('extent',   cudaExtent),
+                ('kind',     c_cudaMemcpyKind)]
+    
+
+# struct cudaMemcpy3DPeerParms
+class cudaMemcpy3DPeerParms(Structure):
+    _fields_ = [('srcArray',  cudaArray_t),
+                ('srcPos',    cudaPos),
+                ('srcPtr',    cudaPitchedPtr),
+                ('srcDevice', c_int),
+
+                ('dstArray',  cudaArray_t),
+                ('dstPos',    cudaPos),
+                ('dstPtr',    cudaPitchedPtr),
+                ('dstDevice', c_int),
+
+                ('extent',    cudaExtent)]
+
+
+###
+### Modules ###
+###
+
+## 1. Device Management ##
 
 # cudaError_t cudaChooseDevice ( int* device,
 #                                const cudaDeviceProp* prop )
@@ -493,10 +584,12 @@ cudaSetValidDevices.argtypes = [POINTER(c_int), # device_arr
                                 c_int           # len
                                 ]
 
-##2. Thread Management##
-#Not implemented DEPRECATED
+##
+## 2. Thread Management ##
+# Not implemented DEPRECATED
 
-##3. Error Handling##
+##
+## 3. Error Handling ##
 
 # char* cudaGetErrorName ( cudaError_t error )
 cudaGetErrorName = libcudart.cudaGetErrorName
@@ -520,8 +613,678 @@ cudaPeekAtLastError = libcudart.cudaPeekAtLastError
 cudaPeekAtLastError.restype = cudaError_t
 cudaPeekAtLastError.argtypes = []
 
+##
+## 9. Memory mangement ##
 
-##26 Version management##
+# cudaError_t cudaArrayGetInfo ( cudaChannelFormatDesc* desc,
+#                                cudaExtent* extent,
+#                                unsigned int* flags,
+#                                cudaArray_t array )
+cudaArrayGetInfo = libcudart.cudaArrayGetInfo
+cudaArrayGetInfo.restype = cudaError_t
+cudaArrayGetInfo.argtypes = [POINTER(cudaChannelFormatDesc), # desc
+                             POINTER(cudaExtent),            # extent
+                             POINTER(c_uint),                # flags
+                             cudaArray_t                     # array
+                             ]
+
+# cudaError_t cudaFree ( void* devPtr )
+cudaFree = libcudart.cudaFree
+cudaFree.restype = cudaError_t
+cudaFree.argtypes = [c_void_p  # devPtr
+                     ]
+
+# cudaError_t cudaFreeArray ( cudaArray_t array )
+cudaFreeArray = libcudart.cudaFreeArray
+cudaFreeArray.restype = cudaError_t
+cudaFreeArray.argtypes = [cudaArray_t  # array
+                          ]
+
+# cudaError_t cudaFreeHost ( void* ptr )
+cudaFreeHost = libcudart.cudaFreeHost
+cudaFreeHost.restype = cudaError_t
+cudaFreeHost.argtypes = [c_void_p  # ptr
+                         ]
+
+# cudaError_t cudaFreeMipmappedArray ( cudaMipmappedArray_t mipmappedArray )
+cudaFreeMipmappedArray = libcudart.cudaFreeMipmappedArray
+cudaFreeMipmappedArray.restype = cudaError_t
+cudaFreeMipmappedArray.argtypes = [cudaMipmappedArray_t  # mipmappedArray
+                                   ]
+
+# cudaError_t cudaGetMipmappedArrayLevel ( cudaArray_t* levelArray,
+#                                          cudaMipmappedArray_const_t mipmappedArray,
+#                                          unsigned int level )
+cudaGetMipmappedArrayLevel = libcudart.cudaGetMipmappedArrayLevel
+cudaGetMipmappedArrayLevel.restype = cudaError_t
+cudaGetMipmappedArrayLevel.argtypes = [POINTER(cudaArray_t),       # levelArray
+                                       cudaMipmappedArray_const_t, # mipmappedArray
+                                       c_uint                      # level
+                                       ]
+
+# cudaError_t cudaGetSymbolAddress ( void** devPtr,
+#                                    const void* symbol )
+cudaGetSymbolAddress = libcudart.cudaGetSymbolAddress
+cudaGetSymbolAddress.restype = cudaError_t
+cudaGetSymbolAddress.argtypes = [POINTER(c_void_p), # devPtr
+                                 c_void_p           # symbol
+                                 ]
+
+# cudaError_t cudaGetSymbolSize ( size_t* size,
+#                                 const void* symbol )
+cudaGetSymbolSize = libcudart.cudaGetSymbolSize
+cudaGetSymbolSize.restype = cudaError_t
+cudaGetSymbolSize.argtypes = [POINTER(c_size_t), # size
+                              c_void_p           # symbol
+                              ]
+
+# cudaError_t cudaHostAlloc ( void** pHost,
+#                             size_t size,
+#                             unsigned int flags )
+cudaHostAlloc = libcudart.cudaHostAlloc
+cudaHostAlloc.restype = cudaError_t
+cudaHostAlloc.argtypes = [POINTER(c_void_p), # pHost
+                          c_size_t,          # size
+                          c_uint             # flags
+                          ]
+
+# cudaError_t cudaHostGetDevicePointer ( void** pDevice,
+#                                        void* pHost,
+#                                        unsigned int flags )
+cudaHostGetDevicePointer = libcudart.cudaHostGetDevicePointer
+cudaHostGetDevicePointer.restype = cudaError_t
+cudaHostGetDevicePointer.argtypes = [POINTER(c_void_p), # pDevice
+                                     c_void_p,          # pHost
+                                     c_uint             # flags
+                                     ]
+
+# cudaError_t cudaHostGetFlags ( unsigned int* pFlags,
+#                                void* pHost )
+cudaHostGetFlags = libcudart.cudaHostGetFlags
+cudaHostGetFlags.restype = cudaError_t
+cudaHostGetFlags.argtypes = [POINTER(c_uint), # pFlags
+                             c_void_p         # pHost
+                             ]
+
+# cudaError_t cudaHostRegister ( void* ptr,
+#                                size_t size,
+#                                unsigned int flags )
+cudaHostRegister = libcudart.cudaHostRegister
+cudaHostRegister.restype = cudaError_t
+cudaHostRegister.argtypes = [c_void_p, # ptr
+                             c_size_t, # size
+                             c_uint    # flags
+                             ]
+
+# cudaError_t cudaHostUnregister ( void* ptr )
+cudaHostUnregister = libcudart.cudaHostUnregister
+cudaHostUnregister.restype = cudaError_t
+cudaHostUnregister.argtypes = [c_void_p  # ptr
+                               ]
+
+# cudaError_t cudaMalloc ( void** devPtr,
+#                          size_t size )
+cudaMalloc = libcudart.cudaMalloc
+cudaMalloc.restype = cudaError_t
+cudaMalloc.argtypes = [POINTER(c_void_p), # devPtr
+                       c_size_t           # size
+                       ]
+
+# cudaError_t cudaMalloc3D ( cudaPitchedPtr* pitchedDevPtr,
+#                            cudaExtent extent )
+cudaMalloc3D = libcudart.cudaMalloc3D
+cudaMalloc3D.restype = cudaError_t
+cudaMalloc3D.argtypes = [POINTER(cudaPitchedPtr), # pitchedDevPtr
+                         cudaExtent               # extent
+                         ]
+
+# cudaError_t cudaMalloc3DArray ( cudaArray_t* array,
+#                                 const cudaChannelFormatDesc* desc,
+#                                 cudaExtent extent,
+#                                 unsigned int flags = 0 )
+cudaMalloc3DArray = libcudart.cudaMalloc3DArray
+cudaMalloc3DArray.restype = cudaError_t
+cudaMalloc3DArray.argtypes = [POINTER(cudaArray_t),           # array
+                              POINTER(cudaChannelFormatDesc), # desc
+                              cudaExtent,                     # extent
+                              c_uint                          # flags = 0
+                              ]
+
+# cudaError_t cudaMallocArray ( cudaArray_t* array,
+#                               const cudaChannelFormatDesc* desc,
+#                               size_t width,
+#                               size_t height = 0,
+#                               unsigned int flags = 0 )
+cudaMallocArray = libcudart.cudaMallocArray
+cudaMallocArray.restype = cudaError_t
+cudaMallocArray.argtypes = [POINTER(cudaArray_t),           # array
+                            POINTER(cudaChannelFormatDesc), # desc
+                            c_size_t,                       # width
+                            c_size_t,                       # height = 0
+                            c_uint                          # flags = 0
+                            ]
+
+# cudaError_t cudaMallocHost ( void** ptr,
+#                              size_t size )
+cudaMallocHost = libcudart.cudaMallocHost
+cudaMallocHost.restype = cudaError_t
+cudaMallocHost.argtypes = [POINTER(c_void_p), # ptr
+                           c_size_t           # size
+                           ]
+
+# cudaError_t cudaMallocManaged ( void** devPtr,
+#                                 size_t size,
+#                                 unsigned int flags )
+cudaMallocManaged = libcudart.cudaMallocManaged
+cudaMallocManaged.restype = cudaError_t
+cudaMallocManaged.argtypes = [POINTER(c_void_p), # devPtr
+                              c_size_t,          # size
+                              c_uint             # flags
+                              ]
+
+# cudaError_t cudaMallocMipmappedArray ( cudaMipmappedArray_t* mipmappedArray,
+#                                        const cudaChannelFormatDesc* desc,
+#                                        cudaExtent extent,
+#                                        unsigned int numLevels,
+#                                        unsigned int flags = 0 )
+cudaMallocMipmappedArray = libcudart.cudaMallocMipmappedArray
+cudaMallocMipmappedArray.restype = cudaError_t
+cudaMallocMipmappedArray.argtypes = [POINTER(cudaMipmappedArray_t),  # mipmappedArray
+                                     POINTER(cudaChannelFormatDesc), # desc
+                                     cudaExtent,                     # extent
+                                     c_uint,                         # numLevels
+                                     c_uint                          # flags = 0
+                                     ]
+
+# cudaError_t cudaMallocPitch ( void** devPtr,
+#                               size_t* pitch,
+#                               size_t width,
+#                               size_t height )
+cudaMallocPitch = libcudart.cudaMallocPitch
+cudaMallocPitch.restype = cudaError_t
+cudaMallocPitch.argtypes = [POINTER(c_void_p), # devPtr
+                            POINTER(c_size_t), # pitch
+                            c_size_t,          # width
+                            c_size_t           # height
+                            ]
+
+# cudaError_t cudaMemGetInfo ( size_t* free,
+#                              size_t* total )
+cudaMemGetInfo = libcudart.cudaMemGetInfo
+cudaMemGetInfo.restype = cudaError_t
+cudaMemGetInfo.argtypes = [POINTER(c_size_t), # free
+                           POINTER(c_size_t)  # total
+                           ]
+
+# cudaError_t cudaMemcpy ( void* dst,
+#                          const void* src,
+#                          size_t count,
+#                          cudaMemcpyKind kind )
+cudaMemcpy = libcudart.cudaMemcpy
+cudaMemcpy.restype = cudaError_t
+cudaMemcpy.argtypes = [c_void_p,        # dst
+                       c_void_p,        # src
+                       c_size_t,        # count
+                       c_cudaMemcpyKind # kind
+                       ]
+
+# cudaError_t cudaMemcpy2D ( void* dst,
+#                            size_t dpitch,
+#                            const void* src,
+#                            size_t spitch,
+#                            size_t width,
+#                            size_t height,
+#                            cudaMemcpyKind kind )
+cudaMemcpy2D = libcudart.cudaMemcpy2D
+cudaMemcpy2D.restype = cudaError_t
+cudaMemcpy2D.argtypes = [c_void_p,        # dst
+                         c_size_t,        # dpitch
+                         c_void_p,        # src
+                         c_size_t,        # spitch
+                         c_size_t,        # width
+                         c_size_t,        # height
+                         c_cudaMemcpyKind # kind
+                         ]
+
+# cudaError_t cudaMemcpy2DArrayToArray ( cudaArray_t dst,
+#                                        size_t wOffsetDst,
+#                                        size_t hOffsetDst,
+#                                        cudaArray_const_t src,
+#                                        size_t wOffsetSrc,
+#                                        size_t hOffsetSrc,
+#                                        size_t width,
+#                                        size_t height,
+#                                        cudaMemcpyKind kind = cudaMemcpyDeviceToDevice )
+cudaMemcpy2DArrayToArray = libcudart.cudaMemcpy2DArrayToArray
+cudaMemcpy2DArrayToArray.restype = cudaError_t
+cudaMemcpy2DArrayToArray.argtypes = [cudaArray_t,       # dst
+                                     c_size_t,          # wOffsetDst
+                                     c_size_t,          # hOffsetDst
+                                     cudaArray_const_t, # src
+                                     c_size_t,          # wOffsetSrc
+                                     c_size_t,          # hOffsetSrc
+                                     c_size_t,          # width
+                                     c_size_t,          # height
+                                     c_cudaMemcpyKind   # kind = cudaMemcpyDeviceToDevice
+                                     ]
+
+# cudaError_t cudaMemcpy2DAsync ( void* dst,
+#                                 size_t dpitch,
+#                                 const void* src,
+#                                 size_t spitch,
+#                                 size_t width,
+#                                 size_t height,
+#                                 cudaMemcpyKind kind,
+#                                 cudaStream_t stream = 0 )
+cudaMemcpy2DAsync = libcudart.cudaMemcpy2DAsync
+cudaMemcpy2DAsync.restype = cudaError_t
+cudaMemcpy2DAsync.argtypes = [c_void_p,         # dst
+                              c_size_t,         # dpitch
+                              c_void_p,         # src
+                              c_size_t,         # spitch
+                              c_size_t,         # width
+                              c_size_t,         # height
+                              c_cudaMemcpyKind, # kind
+                              cudaStream_t      # stream = 0
+                              ]
+
+# cudaError_t cudaMemcpy2DFromArray ( void* dst,
+#                                     size_t dpitch,
+#                                     cudaArray_const_t src,
+#                                     size_t wOffset,
+#                                     size_t hOffset,
+#                                     size_t width,
+#                                     size_t height,
+#                                     cudaMemcpyKind kind )
+cudaMemcpy2DFromArray = libcudart.cudaMemcpy2DFromArray
+cudaMemcpy2DFromArray.restype = cudaError_t
+cudaMemcpy2DFromArray.argtypes = [c_void_p,          # dst
+                                  c_size_t,          # dpitch
+                                  cudaArray_const_t, # src
+                                  c_size_t,          # wOffset
+                                  c_size_t,          # hOffset
+                                  c_size_t,          # width
+                                  c_size_t,          # height
+                                  c_cudaMemcpyKind   # kind
+                                  ]
+
+# cudaError_t cudaMemcpy2DFromArrayAsync ( void* dst,
+#                                          size_t dpitch,
+#                                          cudaArray_const_t src,
+#                                          size_t wOffset,
+#                                          size_t hOffset,
+#                                          size_t width,
+#                                          size_t height,
+#                                          cudaMemcpyKind kind,
+#                                          cudaStream_t stream = 0 )
+cudaMemcpy2DFromArrayAsync = libcudart.cudaMemcpy2DFromArrayAsync
+cudaMemcpy2DFromArrayAsync.restype = cudaError_t
+cudaMemcpy2DFromArrayAsync.argtypes = [c_void_p,          # dst
+                                       c_size_t,          # dpitch
+                                       cudaArray_const_t, # src
+                                       c_size_t,          # wOffset
+                                       c_size_t,          # hOffset
+                                       c_size_t,          # width
+                                       c_size_t,          # height
+                                       c_cudaMemcpyKind,  # kind
+                                       cudaStream_t       # stream = 0
+                                       ]
+
+# cudaError_t cudaMemcpy2DToArray ( cudaArray_t dst,
+#                                   size_t wOffset,
+#                                   size_t hOffset,
+#                                   const void* src,
+#                                   size_t spitch,
+#                                   size_t width,
+#                                   size_t height,
+#                                   cudaMemcpyKind kind )
+cudaMemcpy2DToArray = libcudart.cudaMemcpy2DToArray
+cudaMemcpy2DToArray.restype = cudaError_t
+cudaMemcpy2DToArray.argtypes = [cudaArray_t,     # dst
+                                c_size_t,        # wOffset
+                                c_size_t,        # hOffset
+                                c_void_p,        # src
+                                c_size_t,        # spitch
+                                c_size_t,        # width
+                                c_size_t,        # height
+                                c_cudaMemcpyKind # kind
+                                ]
+
+# cudaError_t cudaMemcpy2DToArrayAsync ( cudaArray_t dst,
+#                                        size_t wOffset,
+#                                        size_t hOffset,
+#                                        const void* src,
+#                                        size_t spitch,
+#                                        size_t width,
+#                                        size_t height,
+#                                        cudaMemcpyKind kind,
+#                                        cudaStream_t stream = 0 )
+cudaMemcpy2DToArrayAsync = libcudart.cudaMemcpy2DToArrayAsync
+cudaMemcpy2DToArrayAsync.restype = cudaError_t
+cudaMemcpy2DToArrayAsync.argtypes = [cudaArray_t,     # dst
+                                     c_size_t,        # wOffset
+                                     c_size_t,        # hOffset
+                                     c_void_p,        # src
+                                     c_size_t,        # spitch
+                                     c_size_t,        # width
+                                     c_size_t,        # height
+                                     c_cudaMemcpyKind, # kind
+                                     cudaStream_t     # stream = 0
+                                     ]
+
+# cudaError_t cudaMemcpy3D ( const cudaMemcpy3DParms* p )
+cudaMemcpy3D = libcudart.cudaMemcpy3D
+cudaMemcpy3D.restype = cudaError_t
+cudaMemcpy3D.argtypes = [POINTER(cudaMemcpy3DParms)  # p
+                         ]
+
+# cudaError_t cudaMemcpy3DAsync ( const cudaMemcpy3DParms* p,
+#                                 cudaStream_t stream = 0 )
+cudaMemcpy3DAsync = libcudart.cudaMemcpy3DAsync
+cudaMemcpy3DAsync.restype = cudaError_t
+cudaMemcpy3DAsync.argtypes = [POINTER(cudaMemcpy3DParms), # p
+                              cudaStream_t                # stream = 0
+                              ]
+
+# cudaError_t cudaMemcpy3DPeer ( const cudaMemcpy3DPeerParms* p )
+cudaMemcpy3DPeer = libcudart.cudaMemcpy3DPeer
+cudaMemcpy3DPeer.restype = cudaError_t
+cudaMemcpy3DPeer.argtypes = [POINTER(cudaMemcpy3DPeerParms)  # p
+                             ]
+
+# cudaError_t cudaMemcpy3DPeerAsync ( const cudaMemcpy3DPeerParms* p,
+#                                     cudaStream_t stream = 0 )
+cudaMemcpy3DPeerAsync = libcudart.cudaMemcpy3DPeerAsync
+cudaMemcpy3DPeerAsync.restype = cudaError_t
+cudaMemcpy3DPeerAsync.argtypes = [POINTER(cudaMemcpy3DPeerParms), # p
+                                  cudaStream_t                    # stream = 0
+                                  ]
+
+# cudaError_t cudaMemcpyArrayToArray ( cudaArray_t dst,
+#                                      size_t wOffsetDst,
+#                                      size_t hOffsetDst,
+#                                      cudaArray_const_t src,
+#                                      size_t wOffsetSrc,
+#                                      size_t hOffsetSrc,
+#                                      size_t count,
+#                                      cudaMemcpyKind kind = cudaMemcpyDeviceToDevice )
+cudaMemcpyArrayToArray = libcudart.cudaMemcpyArrayToArray
+cudaMemcpyArrayToArray.restype = cudaError_t
+cudaMemcpyArrayToArray.argtypes = [cudaArray_t,       # dst
+                                   c_size_t,          # wOffsetDst
+                                   c_size_t,          # hOffsetDst
+                                   cudaArray_const_t, # src
+                                   c_size_t,          # wOffsetSrc
+                                   c_size_t,          # hOffsetSrc
+                                   c_size_t,          # count
+                                   c_cudaMemcpyKind   # kind = cudaMemcpyDeviceToDevice
+                                   ]
+
+# cudaError_t cudaMemcpyAsync ( void* dst,
+#                               const void* src,
+#                               size_t count,
+#                               cudaMemcpyKind kind,
+#                               cudaStream_t stream = 0 )
+cudaMemcpyAsync = libcudart.cudaMemcpyAsync
+cudaMemcpyAsync.restype = cudaError_t
+cudaMemcpyAsync.argtypes = [c_void_p,         # dst
+                            c_void_p,         # src
+                            c_size_t,         # count
+                            c_cudaMemcpyKind, # kind
+                            cudaStream_t      # stream = 0
+                            ]
+
+# cudaError_t cudaMemcpyFromArray ( void* dst,
+#                                   cudaArray_const_t src,
+#                                   size_t wOffset,
+#                                   size_t hOffset,
+#                                   size_t count,
+#                                   cudaMemcpyKind kind )
+cudaMemcpyFromArray = libcudart.cudaMemcpyFromArray
+cudaMemcpyFromArray.restype = cudaError_t
+cudaMemcpyFromArray.argtypes = [c_void_p,          # dst
+                                cudaArray_const_t, # src
+                                c_size_t,          # wOffset
+                                c_size_t,          # hOffset
+                                c_size_t,          # count
+                                c_cudaMemcpyKind   # kind
+                                ]
+
+# cudaError_t cudaMemcpyFromArrayAsync ( void* dst,
+#                                        cudaArray_const_t src,
+#                                        size_t wOffset,
+#                                        size_t hOffset,
+#                                        size_t count,
+#                                        cudaMemcpyKind kind,
+#                                        cudaStream_t stream = 0 )
+cudaMemcpyFromArrayAsync = libcudart.cudaMemcpyFromArrayAsync
+cudaMemcpyFromArrayAsync.restype = cudaError_t
+cudaMemcpyFromArrayAsync.argtypes = [c_void_p,          # dst
+                                     cudaArray_const_t, # src
+                                     c_size_t,          # wOffset
+                                     c_size_t,          # hOffset
+                                     c_size_t,          # count
+                                     c_cudaMemcpyKind,  # kind
+                                     cudaStream_t       # stream = 0
+                                     ]
+
+# cudaError_t cudaMemcpyFromSymbol ( void* dst,
+#                                    const void* symbol,
+#                                    size_t count,
+#                                    size_t offset = 0,
+#                                    cudaMemcpyKind kind = cudaMemcpyDeviceToHost )
+cudaMemcpyFromSymbol = libcudart.cudaMemcpyFromSymbol
+cudaMemcpyFromSymbol.restype = cudaError_t
+cudaMemcpyFromSymbol.argtypes = [c_void_p,        # dst
+                                 c_void_p,        # symbol
+                                 c_size_t,        # count
+                                 c_size_t,        # offset = 0
+                                 c_cudaMemcpyKind # kind = cudaMemcpyDeviceToHost
+                                 ]
+
+# cudaError_t cudaMemcpyFromSymbolAsync ( void* dst,
+#                                         const void* symbol,
+#                                         size_t count,
+#                                         size_t offset,
+#                                         cudaMemcpyKind kind,
+#                                         cudaStream_t stream = 0 )
+cudaMemcpyFromSymbolAsync = libcudart.cudaMemcpyFromSymbolAsync
+cudaMemcpyFromSymbolAsync.restype = cudaError_t
+cudaMemcpyFromSymbolAsync.argtypes = [c_void_p,         # dst
+                                      c_void_p,         # symbol
+                                      c_size_t,         # count
+                                      c_size_t,         # offset
+                                      c_cudaMemcpyKind, # kind
+                                      cudaStream_t      # stream = 0
+                                      ]
+
+# cudaError_t cudaMemcpyPeer ( void* dst,
+#                              int dstDevice,
+#                              const void* src,
+#                              int srcDevice,
+#                              size_t count )
+cudaMemcpyPeer = libcudart.cudaMemcpyPeer
+cudaMemcpyPeer.restype = cudaError_t
+cudaMemcpyPeer.argtypes = [c_void_p, # dst
+                           c_int,    # dstDevice
+                           c_void_p, # src
+                           c_int,    # srcDevice
+                           c_size_t  # count
+                           ]
+
+# cudaError_t cudaMemcpyPeerAsync ( void* dst,
+#                                   int dstDevice,
+#                                   const void* src,
+#                                   int srcDevice,
+#                                   size_t count,
+#                                   cudaStream_t stream = 0 )
+cudaMemcpyPeerAsync = libcudart.cudaMemcpyPeerAsync
+cudaMemcpyPeerAsync.restype = cudaError_t
+cudaMemcpyPeerAsync.argtypes = [c_void_p,     # dst
+                                c_int,        # dstDevice
+                                c_void_p,     # src
+                                c_int,        # srcDevice
+                                c_size_t,     # count
+                                cudaStream_t  # stream = 0
+                                ]
+
+# cudaError_t cudaMemcpyToArray ( cudaArray_t dst,
+#                                 size_t wOffset,
+#                                 size_t hOffset,
+#                                 const void* src,
+#                                 size_t count,
+#                                 cudaMemcpyKind kind )
+cudaMemcpyToArray = libcudart.cudaMemcpyToArray
+cudaMemcpyToArray.restype = cudaError_t
+cudaMemcpyToArray.argtypes = [cudaArray_t,     # dst
+                              c_size_t,        # wOffset
+                              c_size_t,        # hOffset
+                              c_void_p,        # src
+                              c_size_t,        # count
+                              c_cudaMemcpyKind # kind
+                              ]
+
+# cudaError_t cudaMemcpyToArrayAsync ( cudaArray_t dst,
+#                                      size_t wOffset,
+#                                      size_t hOffset,
+#                                      const void* src,
+#                                      size_t count,
+#                                      cudaMemcpyKind kind,
+#                                      cudaStream_t stream = 0 )
+cudaMemcpyToArrayAsync = libcudart.cudaMemcpyToArrayAsync
+cudaMemcpyToArrayAsync.restype = cudaError_t
+cudaMemcpyToArrayAsync.argtypes = [cudaArray_t,      # dst
+                                   c_size_t,         # wOffset
+                                   c_size_t,         # hOffset
+                                   c_void_p,         # src
+                                   c_size_t,         # count
+                                   c_cudaMemcpyKind, # kind
+                                   cudaStream_t      # stream = 0
+                                   ]
+
+# cudaError_t cudaMemcpyToSymbol ( const void* symbol,
+#                                  const void* src,
+#                                  size_t count,
+#                                  size_t offset = 0,
+#                                  cudaMemcpyKind kind = cudaMemcpyHostToDevice )
+cudaMemcpyToSymbol = libcudart.cudaMemcpyToSymbol
+cudaMemcpyToSymbol.restype = cudaError_t
+cudaMemcpyToSymbol.argtypes = [c_void_p,        # symbol
+                               c_void_p,        # src
+                               c_size_t,        # count
+                               c_size_t,        # offset = 0
+                               c_cudaMemcpyKind # kind = cudaMemcpyHostToDevice
+                               ]
+
+# cudaError_t cudaMemcpyToSymbolAsync ( const void* symbol,
+#                                       const void* src,
+#                                       size_t count,
+#                                       size_t offset,
+#                                       cudaMemcpyKind kind,
+#                                       cudaStream_t stream = 0 )
+cudaMemcpyToSymbolAsync = libcudart.cudaMemcpyToSymbolAsync
+cudaMemcpyToSymbolAsync.restype = cudaError_t
+cudaMemcpyToSymbolAsync.argtypes = [c_void_p,         # symbol
+                                    c_void_p,         # src
+                                    c_size_t,         # count
+                                    c_size_t,         # offset
+                                    c_cudaMemcpyKind, # kind
+                                    cudaStream_t      # stream = 0
+                                    ]
+
+# cudaError_t cudaMemset ( void* devPtr,
+#                          int value,
+#                          size_t count )
+cudaMemset = libcudart.cudaMemset
+cudaMemset.restype = cudaError_t
+cudaMemset.argtypes = [c_void_p, # devPtr
+                       c_int,    # value
+                       c_size_t  # count
+                       ]
+
+# cudaError_t cudaMemset2D ( void* devPtr,
+#                            size_t pitch,
+#                            int value,
+#                            size_t width,
+#                            size_t height )
+cudaMemset2D = libcudart.cudaMemset2D
+cudaMemset2D.restype = cudaError_t
+cudaMemset2D.argtypes = [c_void_p, # devPtr
+                         c_size_t, # pitch
+                         c_int,    # value
+                         c_size_t, # width
+                         c_size_t  # height
+                         ]
+
+# cudaError_t cudaMemset2DAsync ( void* devPtr,
+#                                 size_t pitch,
+#                                 int value,
+#                                 size_t width,
+#                                 size_t height,
+#                                 cudaStream_t stream = 0 )
+cudaMemset2DAsync = libcudart.cudaMemset2DAsync
+cudaMemset2DAsync.restype = cudaError_t
+cudaMemset2DAsync.argtypes = [c_void_p,     # devPtr
+                              c_size_t,     # pitch
+                              c_int,        # value
+                              c_size_t,     # width
+                              c_size_t,     # height
+                              cudaStream_t  # stream = 0
+                              ]
+
+# cudaError_t cudaMemset3D ( cudaPitchedPtr pitchedDevPtr,
+#                            int value,
+#                            cudaExtent extent )
+cudaMemset3D = libcudart.cudaMemset3D
+cudaMemset3D.restype = cudaError_t
+cudaMemset3D.argtypes = [cudaPitchedPtr, # pitchedDevPtr
+                         c_int,          # value
+                         cudaExtent      # extent
+                         ]
+
+# cudaError_t cudaMemset3DAsync ( cudaPitchedPtr pitchedDevPtr,
+#                                 int value,
+#                                 cudaExtent extent,
+#                                 cudaStream_t stream = 0 )
+cudaMemset3DAsync = libcudart.cudaMemset3DAsync
+cudaMemset3DAsync.restype = cudaError_t
+cudaMemset3DAsync.argtypes = [cudaPitchedPtr, # pitchedDevPtr
+                              c_int,          # value
+                              cudaExtent,     # extent
+                              cudaStream_t    # stream = 0
+                              ]
+
+# cudaError_t cudaMemsetAsync ( void* devPtr,
+#                               int value,
+#                               size_t count,
+#                               cudaStream_t stream = 0 )
+cudaMemsetAsync = libcudart.cudaMemsetAsync
+cudaMemsetAsync.restype = cudaError_t
+cudaMemsetAsync.argtypes = [c_void_p,     # devPtr
+                            c_int,        # value
+                            c_size_t,     # count
+                            cudaStream_t  # stream = 0
+                            ]
+
+# cudaExtent make_cudaExtent ( size_t w,
+#                              size_t h,
+#                              size_t d )
+make_cudaExtent = cudaExtent # structure constructor
+
+# cudaPitchedPtr make_cudaPitchedPtr ( void* d,
+#                                      size_t p,
+#                                      size_t xsz,
+#                                      size_t ysz )
+make_cudaPitchedPtr = cudaPitchedPtr # structure constructor
+
+# cudaPos make_cudaPos ( size_t x,
+#                        size_t y,
+#                        size_t z )
+make_cudaPos = cudaPos # structure constructor
+
+
+##
+## 26 Version management ##
 
 # ​cudaError_t cudaDriverGetVersion ( int* driverVersion )
 cudaDriverGetVersion = libcudart.cudaDriverGetVersion
@@ -534,10 +1297,10 @@ cudaRuntimeGetVersion.restype = cudaError_t
 cudaRuntimeGetVersion.argtypes = [POINTER(c_int)]
 
 
+###
+### Published symbols in libcudart.so.7.0 not implemented yet:
 
-###Published symbols in libcudart.so.7.0 not implemented yet:
-
-#1
+# 1
 
 # __cudaInitManagedRuntime
 # __cudaInitModule

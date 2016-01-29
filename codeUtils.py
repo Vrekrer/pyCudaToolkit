@@ -6,6 +6,19 @@ import pyperclip
 
 libDir = '/usr/lib/x86_64-linux-gnu/'
 
+c_types_reps = {'int'           :'c_int',
+                'size_t'        :'c_size_t',
+                'char'          :'c_char',
+                'unsigned int'  :'c_uint',
+                'void'          :'',
+                'char*'         :'c_char_p',
+                'void*'         :'c_void_p'
+                }
+
+class XX():
+    pass
+
+
 def getSymbolTable(libname):
     (stdout, stderr) = Popen(["readelf", "-Ds",
                               libDir + libname], stdout=PIPE).communicate()
@@ -29,18 +42,6 @@ def header(funct):
     print 'for funct in [%s, %s, %s, %s]:' % (fS, fD, fC, fZ)
     print '    funct.restype = cublasStatus_t'
     print '    #funct.argtypes = [cublasHandle_t,'
-
-class XX():
-    pass
-
-c_types_reps = {'int'           :'c_int',
-                'size_t'        :'c_size_t',
-                'char'          :'c_char',
-                'unsigned int'  :'c_uint',
-                'void'          :'',
-                'char*'         :'c_char_p',
-                'void*'         :'c_void_p'
-                }
 
 def pharseFunct(doc):
     FunctData = XX()
@@ -86,6 +87,9 @@ def codeFunct(FunctData, libname):
             else: 
                 argtypes.append(' '.join(pars[:2]))
             argNames.append(pars[2])
+        elif '=' in pars:
+            argtypes.append(' '.join(pars[:-3]))
+            argNames.append(' '.join(pars[-3:]))
     for i, t in enumerate(argtypes):
         if t in c_types_reps.keys():
             argtypes[i] = c_types_reps[t]
@@ -110,14 +114,21 @@ def codeFunct(FunctData, libname):
     args += ']\n'
     code += args
     pyperclip.copy(code)
+    return code
+    
+def codeClipBoardFunct(libname):
+    source = pyperclip.paste().splitlines()
+    out = '\n'.join([codeFunct(pharseFunct(l), libname) for l in source])  
+    pyperclip.copy(out)
+   
 
 def pharseStructFields(c_code):
     S = XX()
     lines = c_code.splitlines()
     lines = [line.rsplit(';')[0].strip() for line in lines]
-    S.datatypes = [l.split()[0] for l in lines]
-    S.dataNames = [l.split()[1].rsplit('[')[0] for l in lines]
-    S.arraySize = [(l.split()[1]+'[').rsplit('[')[1].rsplit(']')[0] for l in lines]
+    S.datatypes = [' '.join(l.split()[:-1]) for l in lines]
+    S.dataNames = [l.split()[-1].rsplit('[')[0] for l in lines]
+    S.arraySize = [(l.split()[-1]+'[').rsplit('[')[1].rsplit(']')[0] for l in lines]
     S.size = len(S.datatypes)
     S.maxDataNameSize = max([len(a) for a in S.dataNames])
     return S
@@ -126,9 +137,12 @@ def codeStruct(sData):
     code = '    _fields_ = ['
     lenH = len(code)
     for i in range(sData.size):
-        name_spaces = (sData.maxDataNameSize - len(sData.dataNames[i]))*' '
+        name_spaces = (sData.maxDataNameSize - len(sData.dataNames[i]) + 1)*' '
         code += "('" + sData.dataNames[i] + "'," +name_spaces
-        code += c_types_reps[sData.datatypes[i]]
+        if sData.datatypes[i] in c_types_reps.keys():
+            code += c_types_reps[sData.datatypes[i]]
+        else:
+            code += sData.datatypes[i]
         if sData.arraySize[i] != '':
             code += '*'+sData.arraySize[i]+')'
         else:
@@ -138,3 +152,9 @@ def codeStruct(sData):
         else:
             code += ']'
     pyperclip.copy(code)
+    return code
+
+def codeClipBoardStruct():
+    source = pyperclip.paste()
+    out = codeStruct(pharseStructFields(source))
+    pyperclip.copy(out)
