@@ -8,7 +8,7 @@ http://docs.nvidia.com/cuda/cublas/index.htm
 
 import ctypes
 import numpy
-import pycublas
+import cublas
 import pycuda.gpuarray
 
 class _ndarray_ptr(object):

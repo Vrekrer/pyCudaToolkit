@@ -31,7 +31,7 @@ else:
 
 # cudaError_t
 class cudaError_t(enum.IntEnum):
-    cudaSuccess = 0
+    cudaSuccess                         = 0
     cudaErrorMissingConfiguration       = 1
     cudaErrorMemoryAllocation           = 2
     cudaErrorInitializationError        = 3
