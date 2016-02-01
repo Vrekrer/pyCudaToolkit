@@ -43,13 +43,49 @@ def _errorHandler(error):
     '''Raises an exception if error != cudaSuccess.
     
     This funcion is called every time a cudart function is used.
-    Overwrite this function if needed.
+    Overwrite this function if needed!
     '''
     if error != cudart.cudaError_t.cudaSuccess:
         raise NameError('cudaError: ' + error.name)
 
+
+
 ## 1. Device Management ##
 
+
+def DeviceReset():
+    '''
+    Destroy all allocations and reset all state 
+    on the current device in the current process. 
+    '''
+    error = cudart.cudaDeviceReset(dev)
+    _errorHandler(error)
+
+def GetDevice():
+    '''Returns which device is currently being used.'''
+    dev = ctypes.c_int()
+    error = cudart.cudaGetDevice(dev)
+    _errorHandler(error)
+    return dev.value
+
+def GetDeviceCount():
+    '''Returns the number of compute-capable devices.'''
+    count = ctypes.c_int()
+    error = cudart.cudaGetDeviceCount(count)
+    _errorHandler(error)
+    return count.value
+
+def GetDeviceProperties(dev_num):
+    '''Returns information about the compute-device'''
+    props = cudart.cudaDeviceProp()
+    error = cudart.cudaGetDeviceProperties(props, dev_num)
+    _errorHandler(error)
+    return props
+
+def SetDevice(dev_num):
+    '''Set device to be used for GPU executions.'''
+    error = cudart.cudaSetDevice(dev_num)
+    _errorHandler(error)
 
 ## 3. Error Management ##
 

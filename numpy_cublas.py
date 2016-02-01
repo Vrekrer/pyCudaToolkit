@@ -2,8 +2,9 @@
 
 """
 Python functions to cuBLAS
+
 For documentation see:
-http://docs.nvidia.com/cuda/cublas/index.htm
+http://docs.nvidia.com/cuda/cublas/
 """
 
 import ctypes
