@@ -1425,7 +1425,6 @@ cudaRuntimeGetVersion.argtypes = [POINTER(c_int)]
 # cudaVDPAUGetDevice
 # cudaVDPAUSetVDPAUDevice
 
-
 # DEPRECATED Execution Control module
 # cudaConfigureCall
 # cudaLaunch
