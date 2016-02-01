@@ -10,26 +10,57 @@ http://docs.nvidia.com/cuda/cublas/
 import ctypes
 import numpy
 import cublas
-import pycuda.gpuarray
+import pycudart
+import numbers
 
-class _ndarray_ptr(object):
-    def __init__(self, ndarray):
-        self.data = ndarray #Keep the array alive
-        self.ptr = ndarray.ctypes.data
-    def get(self):
-        return self.data
+#pycuda classes
+try:
+    import pycudax.gpuarray
+    pycudaGPUArray = pycuda.gpuarray.GPUArray
+    PYCUDA_AVIALABLE = True
+except:
+    class no_pycuda(): 
+        pass
+    pycudaGPUArray = no_pycuda
+    PYCUDA_AVIALABLE = False
+
+class ScalarPointer(ctypes.c_void_p):
+    '''Scalar pointers used for cublas
+    '''
+    def __init__(self, value, dtype='Auto', mem = 'host'):
+        '''Creates a pointer to a scalar
+
+        Args:
+            value : Value of the scalar 
+            dtype : 'float32', 'float64', 'complex64', 'complex128' or 'Auto'
+            mem   : 'host' or 'device'
+        '''
+        if not( isinstance(value, numbers.Number) ):
+            raise TypeError("value must be a real or complex number")
+        if dtype == 'Auto':
+            dtype = {True  :'float64',
+                     False :'complex128'}[isinstance(value, numbers.Real)]
+        self._dtype = dtype
+        self._ndarray = numpy.array([value], dtype = self._dtype)
+        super(ctypes.c_void_p, self).__init__(self._ndarray.ctypes.data)
+    @property
+    def value(self):
+        return self._ndarray[0]
+    @property
+    def ptr(self):
+        return self.value
     @property
     def dtype(self):
-        return self.data.dtype
-
+        return self._dtype
+    
 def _isScalar(s):
-    return isinstance(s, (int, float, complex))
+    return isinstance(s, numbers.Number)
 
 def _isArray(a):
-    return isinstance(a, (pycuda.gpuarray.GPUArray, numpy.ndarray) )
+    return isinstance(a, (pycudaGPUArray, numpy.ndarray) )
 
 def _isOnGPU(array):
-    return isinstance(array, pycuda.gpuarray.GPUArray)
+    return isinstance(array, pycudaGPUArray)
 
 _valid_GPU_types = ['float32','float64','complex64','complex128']
 
@@ -55,10 +86,10 @@ def _toGPU(data, new_dtype):
         raise TypeError("data must be array or scalar")
 
 
-class pycublasContext(object):
+class cublasContext(object):
     def __init__(self):
-        self._handle = pycublas.cublasHandle_t()
-        self._cublasStatus = pycublas.cublasCreate(self._handle)
+        self._handle = cublas.cublasHandle_t()
+        self._cublasStatus = cublas.cublasCreate(self._handle)
         
         self.CheckStatusFunction = None
         
@@ -66,7 +97,7 @@ class pycublasContext(object):
         self._autoCast = True
         
     def __del__(self):
-        self.cublasStatus = pycublas.cublasDestroy(self._handle)
+        self.cublasStatus = cublas.cublasDestroy(self._handle)
 
     @property
     def autoCast(self):
@@ -82,16 +113,27 @@ class pycublasContext(object):
             
     def _AutoCaster(self, *args):
         '''
+        Function used for automatic dtypes casting of args
+        
+        returns a list of the casted args in the same order as entered.
+        
+        If autocast is disabled (self.autoCast == False)
+            Then all numbers are casted to host pointers 
+            with the dtype of the first array found.
+            All numpy arrays or host pointers are loaded 
+            into device and returned as device pointers.
+            Device pointers are not checked.
+        
+        If autocast is enabled (self.autoCast == True)
+            
+        
+        Arrays are 
+        
         args = self._AutoCaster(*args)
         return scalars as numpy.darrays and
-               arrays as pycuda.gpuarray.GPUArray
+        arrays as pycuda.gpuarray.GPUArray
         '''
-        if all( [_isScalar(x) for x in args] ):
-            #all are scalars so we cast them to the same type
-            _areComplex = any( [isinstance(x,complex) for x in args] )
-            new_dtype = 'complex128' if _areComplex else 'float64'
-            return [numpy.array([x], dtype=new_dtype) for x in args]
-        elif not self.autoCast:
+        if not self.autoCast:
             #cast scalars to the fist array found
             new_dtype  = next( (x.dtype for x in args if _isArray(x)) )
             return [numpy.array([x], dtype=new_dtype) if _isScalar(x)
@@ -113,9 +155,13 @@ class pycublasContext(object):
                     for x in args]
 
     def _getOPs(self, *args, **kargs):
-        op_dict = {'N': pycublas.cublasOperation_t.CUBLAS_OP_N,
-                   'T': pycublas.cublasOperation_t.CUBLAS_OP_T,
-                   'C': pycublas.cublasOperation_t.CUBLAS_OP_C}
+        '''
+        Check OPERATION strings and return them as 
+        valid cublas.cublasOperation_t instances
+        '''
+        op_dict = {'N': cublas.cublasOperation_t.CUBLAS_OP_N,
+                   'T': cublas.cublasOperation_t.CUBLAS_OP_T,
+                   'C': cublas.cublasOperation_t.CUBLAS_OP_C}
         valid_keys = kargs['valid'] if 'valid' in kargs else op_dict.keys()
         if all([op in valid_keys for op in args]):
             return (op_dict[op] for op in args)
@@ -125,24 +171,36 @@ class pycublasContext(object):
             raise ValueError("op must be %s" % valid_string)
 
     def _getSIDESs(self, *args):
-        side_dict = {'L': pycublas.cublasSideMode_t.CUBLAS_SIDE_LEFT,
-                     'R': pycublas.cublasSideMode_t.CUBLAS_SIDE_RIGHT}
+        '''
+        Check SIDE strings and return them as 
+        valid cublas.cublasSideMode_t instances
+        '''
+        side_dict = {'L': cublas.cublasSideMode_t.CUBLAS_SIDE_LEFT,
+                     'R': cublas.cublasSideMode_t.CUBLAS_SIDE_RIGHT}
         if all([side in side_dict.keys() for side in args]):
             return (side_dict[side] for side in args)
         else:
             raise ValueError("side must be 'L' (left) or 'R' (rigth)")
 
     def _getFILL_MODEs(self, *args):
-        fm_dict = {'U': pycublas.cublasFillMode_t.CUBLAS_FILL_MODE_UPPER,
-                   'L': pycublas.cublasFillMode_t.CUBLAS_FILL_MODE_LOWER}
+        '''
+        Check FILL_MODE strings and return them as 
+        valid cublas.cublasFillMode_t instances
+        '''
+        fm_dict = {'U': cublas.cublasFillMode_t.CUBLAS_FILL_MODE_UPPER,
+                   'L': cublas.cublasFillMode_t.CUBLAS_FILL_MODE_LOWER}
         if all([fm in fm_dict.keys() for fm in args]):
             return (fm_dict[fm] for fm in args)
         else:
             raise ValueError("fillMode must be 'U' (upper) or 'L' (lower)")
 
     def _getDIAGs(self, *args):
-        diag_dict = {'N': pycublas.cublasDiagType_t.CUBLAS_DIAG_NON_UNIT,
-                     'U': pycublas.cublasDiagType_t.CUBLAS_DIAG_UNIT}
+        '''
+        Check DIAGONAL strings and return them as 
+        valid cublas.cublasDiagType_t instances
+        '''
+        diag_dict = {'N': cublas.cublasDiagType_t.CUBLAS_DIAG_NON_UNIT,
+                     'U': cublas.cublasDiagType_t.CUBLAS_DIAG_UNIT}
         if all([diag in diag_dict.keys() for diag in args]):
             return (diag_dict[diag] for diag in args)
         else:
@@ -181,7 +239,7 @@ class pycublasContext(object):
         return self._cublasStatus
     @cublasStatus.setter
     def cublasStatus(self, status):
-        if isinstance(status, pycublas.cublasStatus_t):
+        if isinstance(status, cublas.cublasStatus_t):
             self._cublasStatus = status
         if callable(self.CheckStatusFunction):
             self.CheckStatusFunction(self._cublasStatus)
@@ -190,18 +248,24 @@ class pycublasContext(object):
     @property
     def Version(self):
         version = ctypes.c_int()
-        self.cublasStatus = pycublas.cublasGetVersion(self._handle, version)
+        self.cublasStatus = cublas.cublasGetVersion(self._handle, version)
         return version.value
 
     # cublasPointerMode
     @property
     def pointerMode(self):
-        pMode = pycublas.c_cublasPointerMode_t()
-        self.cublasStatus = pycublas.cublasGetPointerMode(self._handle, pMode)
-        return pycublas.cublasPointerMode_t(pMode.value)
+        '''
+        Indicates whether the scalar values are passed 
+        by reference on the host or device
+        
+        This property is set to the appropiate value on each function call
+        '''
+        pMode = cublas.c_cublasPointerMode_t()
+        self.cublasStatus = cublas.cublasGetPointerMode(self._handle, pMode)
+        return cublas.cublasPointerMode_t(pMode.value)
     @pointerMode.setter
     def pointerMode(self, mode):
-        if isinstance(mode, pycublas.cublasPointerMode_t):
+        if isinstance(mode, cublas.cublasPointerMode_t):
             mode = mode.value
         if mode in ['CUBLAS_POINTER_MODE_HOST', 0, 'Host', 'HOST']:
             mode = 0
@@ -209,17 +273,21 @@ class pycublasContext(object):
             mode = 1
         else:
             mode = self.pointerMode.value
-        self.cublasStatus = pycublas.cublasSetPointerMode(self._handle, mode)
+        self.cublasStatus = cublas.cublasSetPointerMode(self._handle, mode)
 
     # cublasAtomicsMode       
     @property
     def atomicsMode(self):
-        aMode = pycublas.c_cublasAtomicsMode_t()
-        self.cublasStatus = pycublas.cublasGetAtomicsMode(self._handle, aMode)
-        return pycublas.cublasAtomicsMode_t(aMode.value)
+        '''
+        Indicates whether cuBLAS routines which has an 
+        alternate implementation using atomics can be used
+        '''
+        aMode = cublas.c_cublasAtomicsMode_t()
+        self.cublasStatus = cublas.cublasGetAtomicsMode(self._handle, aMode)
+        return cublas.cublasAtomicsMode_t(aMode.value)
     @atomicsMode.setter
     def atomicsMode(self, mode):
-        if isinstance(mode, pycublas.cublasAtomicsMode_t):
+        if isinstance(mode, cublas.cublasAtomicsMode_t):
             mode = mode.value
         if mode in ['CUBLAS_ATOMICS_NOT_ALLOWED', 0, False, 'NOT_ALLOWED']:
             mode = 0
@@ -227,7 +295,7 @@ class pycublasContext(object):
             mode = 1
         else:
             mode = self.atomicsMode.value
-        self.cublasStatus = pycublas.cublasSetAtomicsMode(self._handle, mode)
+        self.cublasStatus = cublas.cublasSetAtomicsMode(self._handle, mode)
 
     ## cuBLAS Level-1 Functions ##
     
@@ -235,10 +303,10 @@ class pycublasContext(object):
     def I_amax(self, X, incx = 1):
         X = _toGPU(X, X.dtype)
     
-        I_amax_function = {'float32'    : pycublas.cublasIsamax,
-                           'float64'    : pycublas.cublasIdamax,
-                           'complex64'  : pycublas.cublasIcamax,
-                           'complex128' : pycublas.cublasIzamax
+        I_amax_function = {'float32'    : cublas.cublasIsamax,
+                           'float64'    : cublas.cublasIdamax,
+                           'complex64'  : cublas.cublasIcamax,
+                           'complex128' : cublas.cublasIzamax
                            }[X.dtype.name]
         result = ctypes.c_int()
         
@@ -250,10 +318,10 @@ class pycublasContext(object):
     def I_amin(self, X, incx = 1):
         X = _toGPU(X, array.dtype)
       
-        I_amin_function = {'float32'    : pycublas.cublasIsamin,
-                           'float64'    : pycublas.cublasIdamin,
-                           'complex64'  : pycublas.cublasIcamin,
-                           'complex128' : pycublas.cublasIzamin
+        I_amin_function = {'float32'    : cublas.cublasIsamin,
+                           'float64'    : cublas.cublasIdamin,
+                           'complex64'  : cublas.cublasIcamin,
+                           'complex128' : cublas.cublasIzamin
                            }[X.dtype.name]
         result = ctypes.c_int()
         
@@ -265,10 +333,10 @@ class pycublasContext(object):
     def asum(self, X, incx = 1):
         X = _toGPU(X, X.dtype)
                   
-        asum_function = {'float32'    : pycublas.cublasSasum, 
-                         'float64'    : pycublas.cublasDasum,
-                         'complex64'  : pycublas.cublasScasum,
-                         'complex128' : pycublas.cublasDzasum
+        asum_function = {'float32'    : cublas.cublasSasum, 
+                         'float64'    : cublas.cublasDasum,
+                         'complex64'  : cublas.cublasScasum,
+                         'complex128' : cublas.cublasDzasum
                          }[X.dtype.name]
         result_type = {'float32'    : ctypes.c_float,
                        'float64'    : ctypes.c_double,
@@ -294,10 +362,10 @@ class pycublasContext(object):
             self.pointerMode = 'HOST'
             alpha = _ndarray_ptr(alpha)
           
-        axpy_function = {'float32'    : pycublas.cublasSaxpy, 
-                         'float64'    : pycublas.cublasDaxpy,
-                         'complex64'  : pycublas.cublasCaxpy,
-                         'complex128' : pycublas.cublasZaxpy
+        axpy_function = {'float32'    : cublas.cublasSaxpy, 
+                         'float64'    : cublas.cublasDaxpy,
+                         'complex64'  : cublas.cublasCaxpy,
+                         'complex128' : cublas.cublasZaxpy
                          }[Y.dtype.name]
         self.cublasStatus = axpy_function(self._handle, Y.size,
                                           alpha.ptr,
@@ -316,14 +384,14 @@ class pycublasContext(object):
         '''
         Y, X = self._AutoCaster(Y, X)
         if 'float' in Y.dtype.name:  
-            dot_function = {'float32' : pycublas.cublasSdot, 
-                            'float64' : pycublas.cublasDdot
+            dot_function = {'float32' : cublas.cublasSdot, 
+                            'float64' : cublas.cublasDdot
                            }[Y.dtype.name]
         else: # complex
-            dot_function = {('complex64' , False) : pycublas.cublasCdotu,
-                            ('complex128', False) : pycublas.cublasZdotu,
-                            ('complex64' , True)  : pycublas.cublasCdotc,
-                            ('complex128', True)  : pycublas.cublasZdotc,
+            dot_function = {('complex64' , False) : cublas.cublasCdotu,
+                            ('complex128', False) : cublas.cublasZdotu,
+                            ('complex64' , True)  : cublas.cublasCdotc,
+                            ('complex128', True)  : cublas.cublasZdotc,
                            }[(Y.dtype.name, cc)]
 
         result = _ndarray_ptr( numpy.array([0], dtype=Y.dtype) )
@@ -340,10 +408,10 @@ class pycublasContext(object):
         """
         X = _toGPU(X, X.dtype)
                   
-        nrm2_function = {'float32'    : pycublas.cublasSnrm2, 
-                         'float64'    : pycublas.cublasDnrm2,
-                         'complex64'  : pycublas.cublasScnrm2,
-                         'complex128' : pycublas.cublasDznrm2
+        nrm2_function = {'float32'    : cublas.cublasSnrm2, 
+                         'float64'    : cublas.cublasDnrm2,
+                         'complex64'  : cublas.cublasScnrm2,
+                         'complex128' : cublas.cublasDznrm2
                          }[X.dtype.name]
         result_type = {'float32'    : ctypes.c_float,
                        'float64'    : ctypes.c_double,
@@ -374,15 +442,15 @@ class pycublasContext(object):
         '''
         Y, X, c, s = self._AutoCaster(Y, X, c, s)
         if 'float' in Y.dtype.name:
-            dot_function = {'float32' : pycublas.cublasSrot,
-                            'float64' : pycublas.cublasDrot
+            dot_function = {'float32' : cublas.cublasSrot,
+                            'float64' : cublas.cublasDrot
                            }[Y.dtype.name]
         else: # complex
             s_complex = (s[0].imag != 0)
-            dot_function = {('complex64' , True) : pycublas.cublasCrot,
-                            ('complex128', True) : pycublas.cublasZrot,
-                            ('complex64' , False): pycublas.cublasCsrot,
-                            ('complex128', False): pycublas.cublasZdrot,
+            dot_function = {('complex64' , True) : cublas.cublasCrot,
+                            ('complex128', True) : cublas.cublasZrot,
+                            ('complex64' , False): cublas.cublasCsrot,
+                            ('complex128', False): cublas.cublasZdrot,
                            }[(Y.dtype.name, s_complex)]
 
         s = _ndarray_ptr(s)
@@ -418,10 +486,10 @@ class pycublasContext(object):
             b = _ndarray_ptr(b)
             s = _ndarray_ptr( numpy.array([0], dtype=a.dtype) )
             c = _ndarray_ptr( numpy.array([0], dtype=a.data.real.dtype) )
-        rotg_function = {'float32'    : pycublas.cublasSrotg,
-                         'float64'    : pycublas.cublasDrotg,
-                         'complex64'  : pycublas.cublasCrotg,
-                         'complex128' : pycublas.cublasZrotg
+        rotg_function = {'float32'    : cublas.cublasSrotg,
+                         'float64'    : cublas.cublasDrotg,
+                         'complex64'  : cublas.cublasCrotg,
+                         'complex128' : cublas.cublasZrotg
                          }[a.dtype.name]
 
         self.cublasStatus = rotg_function(self._handle,
@@ -480,10 +548,10 @@ class pycublasContext(object):
             self.pointerMode = 'HOST'
             alpha = _ndarray_ptr(alpha)
             beta  = _ndarray_ptr(beta)
-        gemv_function = {'float32'    : pycublas.cublasSgemv,
-                         'float64'    : pycublas.cublasDgemv,
-                         'complex64'  : pycublas.cublasCgemv,
-                         'complex128' : pycublas.cublasZgemv
+        gemv_function = {'float32'    : cublas.cublasSgemv,
+                         'float64'    : cublas.cublasDgemv,
+                         'complex64'  : cublas.cublasCgemv,
+                         'complex128' : cublas.cublasZgemv
                          }[y.dtype.name]
         self.cublasStatus = gemv_function(self._handle, op.value,
                                           m, n,
@@ -539,10 +607,10 @@ class pycublasContext(object):
             self.pointerMode = 'HOST'
             alpha = _ndarray_ptr(alpha)
             beta  = _ndarray_ptr(beta)
-        gemm_function = {'float32'    : pycublas.cublasSgemm,
-                         'float64'    : pycublas.cublasDgemm,
-                         'complex64'  : pycublas.cublasCgemm,
-                         'complex128' : pycublas.cublasZgemm
+        gemm_function = {'float32'    : cublas.cublasSgemm,
+                         'float64'    : cublas.cublasDgemm,
+                         'complex64'  : cublas.cublasCgemm,
+                         'complex128' : cublas.cublasZgemm
                          }[C.dtype.name]
         self.cublasStatus = gemm_function(self._handle, 
                                           opA.value, opB.value,
@@ -593,10 +661,10 @@ class pycublasContext(object):
             self.pointerMode = 'HOST'
             alpha = _ndarray_ptr(alpha)
             beta  = _ndarray_ptr(beta)
-        symm_function = {'float32'    : pycublas.cublasSsymm,
-                         'float64'    : pycublas.cublasDsymm,
-                         'complex64'  : pycublas.cublasCsymm,
-                         'complex128' : pycublas.cublasZsymm
+        symm_function = {'float32'    : cublas.cublasSsymm,
+                         'float64'    : cublas.cublasDsymm,
+                         'complex64'  : cublas.cublasCsymm,
+                         'complex128' : cublas.cublasZsymm
                          }[C.dtype.name]
         self.cublasStatus = symm_function(self._handle, 
                                           side.value, fillMode.value,
@@ -644,10 +712,10 @@ class pycublasContext(object):
             self.pointerMode = 'HOST'
             alpha = _ndarray_ptr(alpha)
             beta  = _ndarray_ptr(beta)
-        syrk_function = {'float32'    : pycublas.cublasSsyrk,
-                         'float64'    : pycublas.cublasDsyrk,
-                         'complex64'  : pycublas.cublasCsyrk,
-                         'complex128' : pycublas.cublasZsyrk
+        syrk_function = {'float32'    : cublas.cublasSsyrk,
+                         'float64'    : cublas.cublasDsyrk,
+                         'complex64'  : cublas.cublasCsyrk,
+                         'complex128' : cublas.cublasZsyrk
                          }[C.dtype.name]
         self.cublasStatus = syrk_function(self._handle,
                                           fillMode.value, op.value,
@@ -695,10 +763,10 @@ class pycublasContext(object):
             self.pointerMode = 'HOST'
             alpha = _ndarray_ptr(alpha)
             beta  = _ndarray_ptr(beta)
-        syr2k_function = {'float32'    : pycublas.cublasSsyr2k,
-                          'float64'    : pycublas.cublasDsyr2k,
-                          'complex64'  : pycublas.cublasCsyr2k,
-                          'complex128' : pycublas.cublasZsyr2k
+        syr2k_function = {'float32'    : cublas.cublasSsyr2k,
+                          'float64'    : cublas.cublasDsyr2k,
+                          'complex64'  : cublas.cublasCsyr2k,
+                          'complex128' : cublas.cublasZsyr2k
                           }[C.dtype.name]
         self.cublasStatus = syr2k_function(self._handle,
                                            fillMode.value, op.value,
@@ -754,10 +822,10 @@ class pycublasContext(object):
             self.pointerMode = 'HOST'
             alpha = _ndarray_ptr(alpha)
             beta  = _ndarray_ptr(beta)
-        syrkx_function = {'float32'    : pycublas.cublasSsyrkx,
-                          'float64'    : pycublas.cublasDsyrkx,
-                          'complex64'  : pycublas.cublasCsyrkx,
-                          'complex128' : pycublas.cublasZsyrkx
+        syrkx_function = {'float32'    : cublas.cublasSsyrkx,
+                          'float64'    : cublas.cublasDsyrkx,
+                          'complex64'  : cublas.cublasCsyrkx,
+                          'complex128' : cublas.cublasZsyrkx
                           }[C.dtype.name]
         self.cublasStatus = syrkx_function(self._handle,
                                            fillMode.value, op.value,
@@ -816,10 +884,10 @@ class pycublasContext(object):
         else:
             self.pointerMode = 'HOST'
             alpha = _ndarray_ptr(alpha)
-        trmm_function = {'float32'    : pycublas.cublasStrmm,
-                         'float64'    : pycublas.cublasDtrmm,
-                         'complex64'  : pycublas.cublasCtrmm,
-                         'complex128' : pycublas.cublasZtrmm
+        trmm_function = {'float32'    : cublas.cublasStrmm,
+                         'float64'    : cublas.cublasDtrmm,
+                         'complex64'  : cublas.cublasCtrmm,
+                         'complex128' : cublas.cublasZtrmm
                          }[C.dtype.name]
         self.cublasStatus = trmm_function(self._handle,
                                           side.value, fillMode.value,
@@ -881,10 +949,10 @@ class pycublasContext(object):
         else:
             self.pointerMode = 'HOST'
             alpha = _ndarray_ptr(alpha)
-        trsm_function = {'float32'    : pycublas.cublasStrsm,
-                         'float64'    : pycublas.cublasDtrsm,
-                         'complex64'  : pycublas.cublasCtrsm,
-                         'complex128' : pycublas.cublasZtrsm
+        trsm_function = {'float32'    : cublas.cublasStrsm,
+                         'float64'    : cublas.cublasDtrsm,
+                         'complex64'  : cublas.cublasCtrsm,
+                         'complex128' : cublas.cublasZtrsm
                          }[A.dtype.name]
         self.cublasStatus = trsm_function(self._handle,
                                           side.value, fillMode.value,

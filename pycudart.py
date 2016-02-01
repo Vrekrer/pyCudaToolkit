@@ -13,27 +13,13 @@ import warnings
 
 class _cudaMemoryPointer(ctypes.c_void_p):
     '''Memory pointer for cuda'''
-    def __del__(self):
-        error = cudart.cudaFree(self)
-        print 'cuda ptr deleted'
-    @property
-    def ptr(self):
-        return self.value
     
 class _ndarrayPointer(ctypes.c_void_p):
     '''Pointer object for numpy arrays'''
     def __init__(self, ndarray):
-        super(self.__class__, self).__init__(ndarray.ctypes.data)
-        self.data = ndarray #Keep the array alive
-    def get(self):
-        #code compatibility with pycuda.gpuarray
-        return self.data
-    @property
-    def ptr(self):
-        return self.value
-    @property
-    def dtype(self):
-        return self.data.dtype
+        super(ctypes.c_void_p, self).__init__(ndarray.ctypes.data)
+        self._data = ndarray #Keep the array alive
+
 
 ###
 ### cudart Modules ###
