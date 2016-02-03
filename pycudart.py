@@ -18,7 +18,7 @@ class _ndarrayPointer(ctypes.c_void_p):
     '''Pointer object for numpy arrays'''
     def __init__(self, ndarray):
         super(ctypes.c_void_p, self).__init__(ndarray.ctypes.data)
-        self._data = ndarray #Keep the array alive
+        self.data = ndarray #Keep the array alive
 
 
 ###
@@ -101,19 +101,53 @@ def Free(pointer):
     _errorHandler(error)
 cudaFree = Free
 
-def Malloc(size):
+def Malloc(size, pointer = 'New'):
     '''Allocate memory on the device.
     
     Args:
-        size (int): Requested allocation size in bytes
+        size (int)         : Requested allocation size in bytes
+        pointer (c_void_p) : pointer object or 'New'
 
     Returns:
-        _cudaMemoryPointer: Pointer to allocated device memory
+        if pointer == 'New':
+          _cudaMemoryPointer: New pointer to allocated device memory
+        otherwise
+          the same pointer passed as argument
     '''
-    pointer = _cudaMemoryPointer()
-    error = cudart.cudaMalloc(pointer)
+    if pointer == 'New':
+        pointer = _cudaMemoryPointer()
+    error = cudart.cudaMalloc(pointer, size)
     _errorHandler(error)
+    return pointer
 cudaMalloc = Malloc
+MemAlloc = Malloc
+
+def MemCopy(dst, src, count, kind):
+    '''Copies memory. 
+    
+    Args:
+        dst (c_void_p)        : Destination pointer
+        src (c_void_p)        : Source pointer
+        count (int)           : Number of bytes to copy
+        kind (int or string)  : Type of transfers
+                                0, 'HostToHost', 'H2H'
+                                1, 'HostToDevice', 'H2D'
+                                2, 'DeviceToHost', 'D2H'
+                                3, 'DeviceToDevice' 'D2D'
+                                4, 'Default'
+    '''
+    kinds = {0:0, 'HostToHost':0    , 'H2H':0,
+             1:1, 'HostToDevice':1  , 'H2D':1,
+             2:2, 'DeviceToHost':2  , 'D2H':2, 
+             3:3, 'DeviceToDevice':3, 'D2D':3,
+             4:4, 'Default':4}
+    if kind not in kinds.keys():
+        kind = 'Default'
+    kind = cudart.cudaMemcpyKind(kinds[kind])
+    error = cudart.cudaMemcpy(dst, src, count, kind)
+    _errorHandler(error)
+Memcpy = MemCopy
+
 
 ## 26. Version Managment ##
     

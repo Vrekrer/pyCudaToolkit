@@ -19,72 +19,112 @@ try:
     pycudaGPUArray = pycuda.gpuarray.GPUArray
     PYCUDA_AVIALABLE = True
 except:
-    class no_pycuda(): 
-        pass
-    pycudaGPUArray = no_pycuda
+    pycudaGPUArray = type('no_pycuda', (), {})
     PYCUDA_AVIALABLE = False
 
-class ScalarPointer(ctypes.c_void_p):
-    '''Scalar pointers used for cublas
-    '''
-    def __init__(self, value, dtype='Auto', mem = 'host'):
-        '''Creates a pointer to a scalar
+_valid_array_dtypes = ['float32','float64','complex64','complex128']
 
+class cublasData(ctypes.c_void_p):
+    '''Pointers used for cublas
+    '''
+    def __init__(self, data, dtype='Auto', memType = 'device'):
+        '''Creates a  memory pointer to a scalar or an array
+        
         Args:
-            value : Value of the scalar 
-            dtype : 'float32', 'float64', 'complex64', 'complex128' or 'Auto'
-            mem   : 'host' or 'device'
+            value   : Value of the scalar or ndarray
+            dtype   : 'float32', 'float64', 'complex64', 'complex128' or 'Auto'
+            memType : 'host' or 'device' 
         '''
-        if not( isinstance(value, numbers.Number) ):
-            raise TypeError("value must be a real or complex number")
+        if not isinstance(data, (numpy.ndarray, numbers.Number)):
+            raise TypeError("value must be a number or a numpy array")
+        if memType not in ['host', 'device']:
+            raise ValueError("memType must be 'host' or 'device'")
+            
+        _ndarray = numpy.atleast_1d(data)
         if dtype == 'Auto':
-            dtype = {True  :'float64',
-                     False :'complex128'}[isinstance(value, numbers.Real)]
-        self._dtype = dtype
-        self._ndarray = numpy.array([value], dtype = self._dtype)
-        super(ctypes.c_void_p, self).__init__(self._ndarray.ctypes.data)
+            dtype = _ndarray.dtype
+        if numpy.dtype(dtype).name not in _valid_array_dtypes:
+            dtype = 'float64'
+        _ndarray = _ndarray.astype(dtype, order='F', copy=False)
+        
+        self._dtype = _ndarray.dtype
+        self._shape = _ndarray.shape
+        self._flags = _ndarray.flags
+        self._size  = _ndarray.size
+        
+        self._memType = memType
+        if self._memType == 'host':
+            self._ndarray = _ndarray
+            super(ctypes.c_void_p, self).__init__(self._ndarray.ctypes.data)
+        elif self._memType == 'device':
+            super(ctypes.c_void_p, self).__init__()
+            pycudart.MemAlloc(_ndarray.nbytes, self)
+            pycudart.MemCopy(self, _ndarray.ctypes.data, _ndarray.nbytes, 'H2D')
+            
+    def __del__(self):
+        self.Free()
+        
+    def __repr__(self):
+        return 'cublasData Pointer at %d' %self.value
+        
+    def Free(self):
+        '''
+        Frees the memory in the device or 
+        deletes the reference in the host
+        '''
+        if self._memType == 'host':
+            del self._ndarray
+        elif self._memType == 'device':
+            pycudart.Free(self)
+    
+    def astype(self, dtype = 'Same', memType = 'Same'):
+        if dtype == 'Same':
+            dtype = self._dtype
+        if memType == 'Same':
+            memType = self._memType
+        if numpy.dtype(dtype).name not in _valid_array_dtypes:
+            raise ValueError("Invalid dtype")
+            
+        if (numpy.dtype(dtype) != self._dtype):
+            return cublasData(self.data, dtype, memType)
+        else:
+            return self
+            
     @property
-    def value(self):
-        return self._ndarray[0]
-    @property
-    def ptr(self):
-        return self.value
+    def flags(self):
+        return self._flags
     @property
     def dtype(self):
         return self._dtype
-    
-def _isScalar(s):
-    return isinstance(s, numbers.Number)
+    @property
+    def shape(self):
+        return self._shape
+    @property
+    def size(self):
+        return self._size
+        
+    @property
+    def memType(self):
+        return self._memType
+    @property
+    def isOnGPU(self):
+        return self._memType == 'device'
+    @property
+    def isOnCPU(self):
+        return self._memType == 'host'
+        
+    @property
+    def data(self):
+        if self._memType == 'host':
+            data = self._ndarray
+        elif self._memType == 'device':
+            data = numpy.zeros(self._shape, dtype=self._dtype, order='F')
+            pycudart.MemCopy(data.ctypes.data, self, data.nbytes, 'D2H')
 
-def _isArray(a):
-    return isinstance(a, (pycudaGPUArray, numpy.ndarray) )
-
-def _isOnGPU(array):
-    return isinstance(array, pycudaGPUArray)
-
-_valid_GPU_types = ['float32','float64','complex64','complex128']
-
-def _toGPU(data, new_dtype):
-    if numpy.dtype(new_dtype).name not in _valid_GPU_types:
-        new_dtype = 'float64'
-
-    if _isScalar(data):
-        return pycuda.gpuarray.to_gpu( numpy.array([data], dtype=new_dtype) )
-
-    elif _isOnGPU(data):
-        if data.flags.f_contiguous:
-            if data.dtype == new_dtype:
-                return data
-            else:
-                return data.astype(new_dtype)
+        if data.size == 1:
+            return data.item()
         else:
-            return _toGPU(numpy.asfortranarray(data.get(), new_dtype))
-
-    elif isinstance(data, numpy.ndarray):
-        return pycuda.gpuarray.to_gpu( numpy.asfortranarray(data, new_dtype) )
-    else:
-        raise TypeError("data must be array or scalar")
-
+            return data
 
 class cublasContext(object):
     def __init__(self):
@@ -94,65 +134,39 @@ class cublasContext(object):
         self.CheckStatusFunction = None
         
         self._returnToHost = True
-        self._autoCast = True
         
     def __del__(self):
         self.cublasStatus = cublas.cublasDestroy(self._handle)
 
-    @property
-    def autoCast(self):
-        '''
-        True  : Automatic cast of arrays and scalars to the common dtype
-        False : Do not check array dtypes,
-                scalars are always casted to the appropriate type
-        '''
-        return self._autoCast
-    @autoCast.setter
-    def autoCast(self, value):
-        self._autoCast = bool(value)
-            
     def _AutoCaster(self, *args):
         '''
         Function used for automatic dtypes casting of args
         
-        returns a list of the casted args in the same order as entered.
+        Args: list of numbers, numpy arrays, 
+              cublasData objects or pycuda GPUArrays
         
-        If autocast is disabled (self.autoCast == False)
-            Then all numbers are casted to host pointers 
-            with the dtype of the first array found.
-            All numpy arrays or host pointers are loaded 
-            into device and returned as device pointers.
-            Device pointers are not checked.
-        
-        If autocast is enabled (self.autoCast == True)
-            
-        
-        Arrays are 
-        
-        args = self._AutoCaster(*args)
-        return scalars as numpy.darrays and
-        arrays as pycuda.gpuarray.GPUArray
+        Returns a list of cublasData pointers of the args.
+        Largest dtype is calculated and used to cast numbers and arrays, 
+        cublasData objects are recasted if needed
+        Numbers are returned as host pointers while arrays are loaded 
+        into device memory
         '''
-        if not self.autoCast:
-            #cast scalars to the fist array found
-            new_dtype  = next( (x.dtype for x in args if _isArray(x)) )
-            return [numpy.array([x], dtype=new_dtype) if _isScalar(x)
-                    else _toGPU(x, x.dtype) 
-                    for x in args]
-        else: #autoCast
-            _areComplex = any( [isinstance(x,complex) if _isScalar(x) 
-                                else ('complex' in x.dtype.name)
-                                for x in args] )
-            _areSingle = all( [True if _isScalar(x) 
-                              else x.dtype.name in ['float32','complex64']
-                              for x in args] )
-            new_dtype = {(False,True ):'float32',
-                         (False,False):'float64',
-                         (True, True ):'complex64',
-                         (True, False):'complex128'}[(_areComplex, _areSingle)]
-            return [numpy.array([x], dtype=new_dtype) if _isScalar(x) 
-                    else _toGPU(x, new_dtype) 
-                    for x in args]
+        _areComplex = any( [isinstance(x, complex)
+                            if isinstance(x, numbers.Number)
+                            else ('complex' in x.dtype.name)
+                            for x in args] )
+        _areSingle = all( [True if isinstance(x, numbers.Number)
+                           else x.dtype.name not in ['float64','complex128']
+                           for x in args] )
+        dtype = {(False,True ):'float32',
+                 (False,False):'float64',
+                 (True, True ):'complex64',
+                 (True, False):'complex128'}[(_areComplex, _areSingle)]
+        
+        return [cublasData(x, dtype, 'host') if isinstance(x, numbers.Number)
+                else x.astype(dtype, 'device') if isinstance(x, cublasData)
+                else cublasData(x, dtype, 'device')
+                for x in args]
 
     def _getOPs(self, *args, **kargs):
         '''
@@ -209,7 +223,7 @@ class cublasContext(object):
     @property
     def returnToHost(self):
         '''
-        if True return arrays are instances of numpy.ndarray
+        If True return arrays are instances of numpy.ndarray
         returnToHost = not(returnToDevice)
         '''
         return self._returnToHost
@@ -219,7 +233,7 @@ class cublasContext(object):
     @property
     def returnToDevice(self):
         '''
-        if True return arrays are instances of pycuda.gpuarray.GPUArray
+        If True return arrays are instances of pycuda.gpuarray.GPUArray
         returnToDevice = not(returnToHost)
         '''
         return not self._returnToHost
@@ -227,11 +241,11 @@ class cublasContext(object):
     def returnToDevice(self, value):
         self._returnToHost = not bool(value)
 
-    def _return(self, data):
+    def _return(self, pointer):
         if self.returnToDevice:
-            return data
+            return pointer
         elif self.returnToHost:
-            return data.get() #TODO use cublasGetVector / Matrix
+            return pointer.data
     
     ## cublasStatus Check ##
     @property
@@ -267,9 +281,11 @@ class cublasContext(object):
     def pointerMode(self, mode):
         if isinstance(mode, cublas.cublasPointerMode_t):
             mode = mode.value
-        if mode in ['CUBLAS_POINTER_MODE_HOST', 0, 'Host', 'HOST']:
+        if mode in ['CUBLAS_POINTER_MODE_HOST', 0, 
+                    'Host', 'HOST', 'host']:
             mode = 0
-        elif mode in ['CUBLAS_POINTER_MODE_DEVICE', 1, 'Device', 'DEVICE']:
+        elif mode in ['CUBLAS_POINTER_MODE_DEVICE', 1, 
+                      'Device', 'DEVICE', 'device']:
             mode = 1
         else:
             mode = self.pointerMode.value
@@ -301,7 +317,7 @@ class cublasContext(object):
     
     # cublasI_amax
     def I_amax(self, X, incx = 1):
-        X = _toGPU(X, X.dtype)
+        X = self._AutoCaster(X)[0]
     
         I_amax_function = {'float32'    : cublas.cublasIsamax,
                            'float64'    : cublas.cublasIdamax,
@@ -311,12 +327,12 @@ class cublasContext(object):
         result = ctypes.c_int()
         
         self.cublasStatus = I_amax_function(self._handle, X.size,
-                                            X.ptr, incx, result)
+                                            X, incx, result)
         return result.value - 1        
 
     # cublasI_amin        
     def I_amin(self, X, incx = 1):
-        X = _toGPU(X, array.dtype)
+        X = self._AutoCaster(X)[0]
       
         I_amin_function = {'float32'    : cublas.cublasIsamin,
                            'float64'    : cublas.cublasIdamin,
@@ -326,12 +342,12 @@ class cublasContext(object):
         result = ctypes.c_int()
         
         self.cublasStatus = I_amin_function(self._handle, X.size,
-                                            X.ptr, incx, result)
+                                            X, incx, result)
         return result.value - 1  
 
     # cublas_asum         
     def asum(self, X, incx = 1):
-        X = _toGPU(X, X.dtype)
+        X = self._AutoCaster(X)[0]
                   
         asum_function = {'float32'    : cublas.cublasSasum, 
                          'float64'    : cublas.cublasDasum,
@@ -346,7 +362,7 @@ class cublasContext(object):
                          
         result = result_type()
         self.cublasStatus = asum_function(self._handle, X.size,
-                                          X.ptr, incx, result)
+                                          X, incx, result)
         return result.value
 
     # cublas_axpy         
@@ -356,21 +372,16 @@ class cublasContext(object):
         '''
         Y, alpha, X = self._AutoCaster(Y, alpha, X)
 
-        if _isOnGPU(alpha):
-            self.pointerMode = 'DEVICE'
-        else:
-            self.pointerMode = 'HOST'
-            alpha = _ndarray_ptr(alpha)
-          
+        self.pointerMode = alpha.memType
         axpy_function = {'float32'    : cublas.cublasSaxpy, 
                          'float64'    : cublas.cublasDaxpy,
                          'complex64'  : cublas.cublasCaxpy,
                          'complex128' : cublas.cublasZaxpy
                          }[Y.dtype.name]
         self.cublasStatus = axpy_function(self._handle, Y.size,
-                                          alpha.ptr,
-                                          X.ptr, incx,
-                                          Y.ptr, incy)
+                                          alpha,
+                                          X, incx,
+                                          Y, incy)
         return self._return(Y)
     
     #TODO cublas_copy
