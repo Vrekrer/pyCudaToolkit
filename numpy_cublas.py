@@ -22,7 +22,9 @@ except:
     pycudaGPUArray = type('no_pycuda', (), {})
     PYCUDA_AVIALABLE = False
 
-_valid_array_dtypes = ['float32','float64','complex64','complex128']
+_valid_array_dtypes = set(['float32','float64','complex64','complex128'])
+_real_dtypes = set(['float32','float64'])
+_complex_dtypes = set(['complex64','complex128'])
 
 class cublasData(ctypes.c_void_p ,object):
     '''Pointers used for cublas
@@ -41,12 +43,15 @@ class cublasData(ctypes.c_void_p ,object):
             raise ValueError("memType must be 'host' or 'device'")
             
         _ndarray = numpy.atleast_1d(data)
-        if dtype == 'Auto':
+        if str(dtype) == 'Auto':
             dtype = _ndarray.dtype
-        if numpy.dtype(dtype).name not in _valid_array_dtypes:
+        if str(dtype) not in _valid_array_dtypes:
             dtype = 'float64'
+        if str(dtype) in _real_dtypes:
+            _ndarray = _ndarray.real
+            
         _ndarray = _ndarray.astype(dtype, order='F', copy=False)
-        
+            
         self._dtype  = _ndarray.dtype
         self._shape  = _ndarray.shape
         self._flags  = _ndarray.flags
@@ -139,18 +144,21 @@ class cublasData(ctypes.c_void_p ,object):
         
         
     @property
-    def data(self):
+    def ndarray(self):
         if self._memType == 'host':
-            data = self._ndarray
+            ndarray = self._ndarray
         elif self._memType == 'device':
-            data = numpy.zeros(self._shape, dtype=self._dtype, order='F')
-            pycudart.MemCopy(data.ctypes.data, self, 
-                             data.nbytes, 'DeviceToHost')
-
-        if data.size == 1:
-            return data.item()
+            ndarray = numpy.zeros(self._shape, dtype=self._dtype, order='F')
+            pycudart.MemCopy(ndarray.ctypes.data, self, 
+                             self._nbytes, 'DeviceToHost')
+        return ndarray
+    @property
+    def data(self):
+        if self._size == 1:
+            return self.ndarray.item()
         else:
-            return data
+            return self.ndarray
+
 
 class cublasContext(object):
     def __init__(self):
@@ -204,7 +212,7 @@ class cublasContext(object):
                    'C': cublas.cublasOperation_t.CUBLAS_OP_C}
         valid_keys = kargs['valid'] if 'valid' in kargs else op_dict.keys()
         if all([op in valid_keys for op in args]):
-            return (op_dict[op] for op in args)
+            return [op_dict[op] for op in args]
         else:
             valid_string = ', '.join("'%s'"% s for s in valid_keys[:-1]) + \
                            " or '%s'" % valid_keys[-1]
@@ -218,7 +226,7 @@ class cublasContext(object):
         side_dict = {'L': cublas.cublasSideMode_t.CUBLAS_SIDE_LEFT,
                      'R': cublas.cublasSideMode_t.CUBLAS_SIDE_RIGHT}
         if all([side in side_dict.keys() for side in args]):
-            return (side_dict[side] for side in args)
+            return [side_dict[side] for side in args]
         else:
             raise ValueError("side must be 'L' (left) or 'R' (rigth)")
 
@@ -230,7 +238,7 @@ class cublasContext(object):
         fm_dict = {'U': cublas.cublasFillMode_t.CUBLAS_FILL_MODE_UPPER,
                    'L': cublas.cublasFillMode_t.CUBLAS_FILL_MODE_LOWER}
         if all([fm in fm_dict.keys() for fm in args]):
-            return (fm_dict[fm] for fm in args)
+            return [fm_dict[fm] for fm in args]
         else:
             raise ValueError("fillMode must be 'U' (upper) or 'L' (lower)")
 
@@ -396,7 +404,7 @@ class cublasContext(object):
         '''
         Y = alpha * X + Y
         '''
-        Y, alpha, X = self._AutoCaster(Y, alpha, X)
+        alpha, X, Y = self._AutoCaster(alpha, X, Y)
 
         self.pointerMode = alpha.memType
         axpy_function = {'float32'    : cublas.cublasSaxpy, 
@@ -419,7 +427,7 @@ class cublasContext(object):
         if cc (complex conjugate) = True
         X.Y*
         '''
-        Y, X = self._AutoCaster(Y, X)
+        X, Y = self._AutoCaster(X, Y)
         if 'float' in Y.dtype.name:  
             dot_function = {'float32' : cublas.cublasSdot, 
                             'float64' : cublas.cublasDdot
@@ -431,19 +439,19 @@ class cublasContext(object):
                             ('complex128', True)  : cublas.cublasZdotc,
                            }[(Y.dtype.name, cc)]
 
-        result = _ndarray_ptr( numpy.array([0], dtype=Y.dtype) )
+        result = cublasData(0, Y.dtype, 'host')
         self.cublasStatus = dot_function(self._handle, Y.size,
-                                         X.ptr, incx,
-                                         Y.ptr, incy,
-                                         result.ptr)
-        return result.data[0]
+                                         X, incx,
+                                         Y, incy,
+                                         result)
+        return result.data
             
     # cublas_nrm2         
     def nrm2(self, X, incx = 1):
         """
         Eucledian norm
         """
-        X = _toGPU(X, X.dtype)
+        X = _AutoCaster(X)[0]
                   
         nrm2_function = {'float32'    : cublas.cublasSnrm2, 
                          'float64'    : cublas.cublasDnrm2,
@@ -466,36 +474,39 @@ class cublasContext(object):
         '''
         (X, Y) = rot(X, Y, c, s, incx = 1, incy = 1)
         This function applies Givens rotation matrix
-
+        
         G = [[  c, s],
              [-s*, c]]
-
+             
         to vectors X and Y.
         Hence, the result is X[k] =   c * X[k] + s * Y[j]
                          and Y[j] = - s * X[k] + c * Y[j]
         where k = i * incx  and j = i * incy
-
+        
         if c is complex, only the real part is used
         '''
-        Y, X, c, s = self._AutoCaster(Y, X, c, s)
+        X, Y, _c, _s = self._AutoCaster(X, Y, c, s)
         if 'float' in Y.dtype.name:
             dot_function = {'float32' : cublas.cublasSrot,
                             'float64' : cublas.cublasDrot
                            }[Y.dtype.name]
+            c = _c
+            s = _s
         else: # complex
-            s_complex = (s[0].imag != 0)
+            s_complex = (_s.data.imag != 0)
             dot_function = {('complex64' , True) : cublas.cublasCrot,
                             ('complex128', True) : cublas.cublasZrot,
                             ('complex64' , False): cublas.cublasCsrot,
                             ('complex128', False): cublas.cublasZdrot,
                            }[(Y.dtype.name, s_complex)]
-
-        s = _ndarray_ptr(s)
-        c = _ndarray_ptr(c.real)
+            s = _s if s_complex else \
+                self._AutoCaster(s)[0].astype(_s.ndarray.real.dtype)
+            c = self._AutoCaster(c)[0].astype(_s.ndarray.real.dtype)
+                
         self.cublasStatus = dot_function(self._handle, Y.size,
-                                         X.ptr, incx,
-                                         Y.ptr, incy,
-                                         c.ptr, s.ptr)
+                                         X, incx,
+                                         Y, incy,
+                                         c, s)
         return self._return(X), self._return(Y)
 
      # cublas_rotg
@@ -511,18 +522,13 @@ class cublasContext(object):
         '''
         a, b = self._AutoCaster(a, b)
 
-        if _isOnGPU(a) or _isOnGPU(b):
-            self.pointerMode = 'DEVICE'
-            a = _toGPU(a, a.dtype)
-            b = _toGPU(b, a.dtype)
-            s = _toGPU(0, a.dtype)
-            c = _toGPU(0, a.real.dtype)
-        else:
-            self.pointerMode = 'HOST'
-            a = _ndarray_ptr(a)
-            b = _ndarray_ptr(b)
-            s = _ndarray_ptr( numpy.array([0], dtype=a.dtype) )
-            c = _ndarray_ptr( numpy.array([0], dtype=a.data.real.dtype) )
+        memType = {True:'device', False:'host'}[a.isOnGPU or b.isOnGPU]
+        self.pointerMode = memType
+        a = a.astype(memType = memType)
+        b = b.astype(memType = memType)
+        s = cublasData(0, a.dtype, memType = memType)
+        c = cublasData(0, a.ndarray.real.dtype, memType = memType)
+
         rotg_function = {'float32'    : cublas.cublasSrotg,
                          'float64'    : cublas.cublasDrotg,
                          'complex64'  : cublas.cublasCrotg,
@@ -530,12 +536,12 @@ class cublasContext(object):
                          }[a.dtype.name]
 
         self.cublasStatus = rotg_function(self._handle,
-                                          a.ptr, b.ptr,
-                                          c.ptr, s.ptr)
+                                          a, b,
+                                          c, s)
         if self.returnToDevice:
-            return _toGPU(c, c.dtype), _toGPU(s, s.dtype)
+            return c.astype(memType = 'device'), s.astype(memType = 'device')
         else: #return to host
-            return c.get()[0], s.get()[0]
+            return c.data, s.data
 
     #TODO cublas_rotm
     #TODO cublas_rotmg
