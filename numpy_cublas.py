@@ -24,7 +24,7 @@ except:
 
 _valid_array_dtypes = ['float32','float64','complex64','complex128']
 
-class cublasData(ctypes.c_void_p):
+class cublasData(ctypes.c_void_p ,object):
     '''Pointers used for cublas
     '''
     def __init__(self, data, dtype='Auto', memType = 'device'):
@@ -47,48 +47,69 @@ class cublasData(ctypes.c_void_p):
             dtype = 'float64'
         _ndarray = _ndarray.astype(dtype, order='F', copy=False)
         
-        self._dtype = _ndarray.dtype
-        self._shape = _ndarray.shape
-        self._flags = _ndarray.flags
-        self._size  = _ndarray.size
+        self._dtype  = _ndarray.dtype
+        self._shape  = _ndarray.shape
+        self._flags  = _ndarray.flags
+        self._size   = _ndarray.size
+        self._nbytes = _ndarray.nbytes
         
         self._memType = memType
         if self._memType == 'host':
             self._ndarray = _ndarray
             super(ctypes.c_void_p, self).__init__(self._ndarray.ctypes.data)
         elif self._memType == 'device':
-            super(ctypes.c_void_p, self).__init__()
-            pycudart.MemAlloc(_ndarray.nbytes, self)
-            pycudart.MemCopy(self, _ndarray.ctypes.data, _ndarray.nbytes, 'H2D')
+            super(ctypes.c_void_p, self).__init__(None)
+            pycudart.MemAlloc(self._nbytes, self)
+            pycudart.MemCopy(self, _ndarray.ctypes.data, 
+                             self._nbytes, 'HostToDevice')
             
     def __del__(self):
         self.Free()
         
     def __repr__(self):
-        return 'cublasData Pointer at %d' %self.value
+        return 'cublasData @%s pointing to %s at %s' %(id(self), 
+                                                       self.value, 
+                                                       self._memType)
         
     def Free(self):
         '''
         Frees the memory in the device or 
-        deletes the reference in the host
+        deletes the array reference in the host
         '''
         if self._memType == 'host':
             del self._ndarray
         elif self._memType == 'device':
             pycudart.Free(self)
+        super(ctypes.c_void_p, self).__init__(None)
     
-    def astype(self, dtype = 'Same', memType = 'Same'):
-        if dtype == 'Same':
+    def astype(self, dtype = 'no change', memType = 'no change'):
+        if dtype == 'no change':
             dtype = self._dtype
-        if memType == 'Same':
+        if memType == 'no change':
             memType = self._memType
         if numpy.dtype(dtype).name not in _valid_array_dtypes:
             raise ValueError("Invalid dtype")
             
-        if (numpy.dtype(dtype) != self._dtype):
+        if (numpy.dtype(dtype) != self._dtype) or (memType != self._memType):
             return cublasData(self.data, dtype, memType)
         else:
             return self
+    
+    def copy(self, dtype = 'no change', memType = 'no change'):
+        if (dtype != 'no change') or (memType != 'no change'):
+            return self.astype(dtype, memType)
+        
+        newCopy = ctypes._SimpleCData.__new__(cublasData)
+        newCopy.__dict__ = self.__dict__.copy()
+        if self._memType == 'host':
+            newCopy._ndarray = self._ndarray.copy(order = 'F')
+            super(ctypes.c_void_p, newCopy).__init__(newCopy._ndarray.ctypes.data)
+        elif self._memType == 'device':
+            super(ctypes.c_void_p, newCopy).__init__(None)
+            pycudart.MemAlloc(newCopy._nbytes, newCopy)
+            pycudart.MemCopy(newCopy, self, 
+                             newCopy._nbytes, 'DeviceToDevice')
+        return newCopy
             
     @property
     def flags(self):
@@ -102,6 +123,9 @@ class cublasData(ctypes.c_void_p):
     @property
     def size(self):
         return self._size
+    @property
+    def nbytes(self):
+        return self._nbytes
         
     @property
     def memType(self):
@@ -113,13 +137,15 @@ class cublasData(ctypes.c_void_p):
     def isOnCPU(self):
         return self._memType == 'host'
         
+        
     @property
     def data(self):
         if self._memType == 'host':
             data = self._ndarray
         elif self._memType == 'device':
             data = numpy.zeros(self._shape, dtype=self._dtype, order='F')
-            pycudart.MemCopy(data.ctypes.data, self, data.nbytes, 'D2H')
+            pycudart.MemCopy(data.ctypes.data, self, 
+                             data.nbytes, 'DeviceToHost')
 
         if data.size == 1:
             return data.item()
@@ -359,8 +385,8 @@ class cublasContext(object):
                        'complex64'  : ctypes.c_float,
                        'complex128' : ctypes.c_double
                        }[X.dtype.name]   
-                         
         result = result_type()
+        
         self.cublasStatus = asum_function(self._handle, X.size,
                                           X, incx, result)
         return result.value

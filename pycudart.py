@@ -39,7 +39,7 @@ def _errorHandler(error):
 ## 1. Device Management ##
 
 
-def DeviceReset():
+def DeviceReset(dev):
     '''
     Destroy all allocations and reset all state 
     on the current device in the current process. 
@@ -121,6 +121,20 @@ def Malloc(size, pointer = 'New'):
     return pointer
 cudaMalloc = Malloc
 MemAlloc = Malloc
+
+def MemGetInfo():
+    '''Gets free and total device memory.
+    
+    Returns a tupple (free, total)
+    with the free an total Memory in bytes
+    
+    '''
+    free = ctypes.c_size_t()
+    total = ctypes.c_size_t()
+    error = cudart.cudaMemGetInfo(free, total)
+    _errorHandler(error)
+    return ( int(free.value), int(total.value) )
+    
 
 def MemCopy(dst, src, count, kind):
     '''Copies memory. 
