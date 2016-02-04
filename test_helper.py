@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from pycublas import *
+from cublas import *
 from ctypes import *
 
 #Test functions
